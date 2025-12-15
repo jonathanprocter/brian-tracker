@@ -39,13 +39,24 @@ export default function CompleteQuest() {
       setResult(data);
       setShowSuccess(true);
       
-      // Trigger confetti if leveled up
+      // Trigger confetti on every task completion for positive reinforcement
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6']
+      });
+      
+      // Extra confetti burst if leveled up
       if (data.leveledUp) {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
+        setTimeout(() => {
+          confetti({
+            particleCount: 150,
+            spread: 100,
+            origin: { y: 0.5 },
+            colors: ['#fbbf24', '#f59e0b', '#d97706']
+          });
+        }, 300);
       }
       
       // Get AI personalized message
