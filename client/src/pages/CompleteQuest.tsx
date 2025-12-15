@@ -10,6 +10,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
+import { playCelebrationSound, playLevelUpSound } from "@/lib/sounds";
 
 export default function CompleteQuest() {
   const [, setLocation] = useLocation();
@@ -39,15 +40,16 @@ export default function CompleteQuest() {
       setResult(data);
       setShowSuccess(true);
       
-      // Trigger confetti on every task completion for positive reinforcement
+      // Trigger confetti and sound on every task completion for positive reinforcement
       confetti({
         particleCount: 80,
         spread: 60,
         origin: { y: 0.6 },
         colors: ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6']
       });
+      playCelebrationSound();
       
-      // Extra confetti burst if leveled up
+      // Extra confetti burst and fanfare if leveled up
       if (data.leveledUp) {
         setTimeout(() => {
           confetti({
@@ -56,6 +58,7 @@ export default function CompleteQuest() {
             origin: { y: 0.5 },
             colors: ['#fbbf24', '#f59e0b', '#d97706']
           });
+          playLevelUpSound();
         }, 300);
       }
       

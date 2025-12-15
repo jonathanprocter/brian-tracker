@@ -186,4 +186,5 @@
 
 
 ## Confetti Animation
-- [x] Add confetti animation on task completion for positive reinforcement
+-- [x] Add confetti animation on task completion for positive reinforcement
+- [x] Add celebration sound effect with confetti animation
