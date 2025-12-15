@@ -28,6 +28,11 @@ export default function Admin() {
     { enabled: !!brianId }
   );
 
+  const { data: aiSummary, isLoading: aiLoading } = trpc.ai.getClientSummary.useQuery(
+    { userId: brianId! },
+    { enabled: !!brianId }
+  );
+
   if (!isAuthenticated || user?.role !== 'admin') {
     toast.error("Admin access required");
     setLocation("/");
@@ -165,6 +170,54 @@ export default function Admin() {
             </CardContent>
           </Card>
         )}
+
+        {/* AI Clinical Summary */}
+        <Card className="bg-primary/5 border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-xl">🧠</span>
+              AI Clinical Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {aiLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <span className="ml-2 text-sm text-muted-foreground">Analyzing client data...</span>
+              </div>
+            ) : aiSummary ? (
+              <>
+                <p className="text-sm leading-relaxed">
+                  {typeof aiSummary.summary === 'string' ? aiSummary.summary : 'Unable to generate summary.'}
+                </p>
+                
+                {aiSummary.positives && aiSummary.positives.length > 0 && (
+                  <div className="bg-success/10 border border-success/20 rounded-lg p-3">
+                    <p className="text-sm font-medium text-success mb-2">✅ Positives</p>
+                    <ul className="text-sm space-y-1">
+                      {aiSummary.positives.map((positive: string, i: number) => (
+                        <li key={i} className="text-muted-foreground">• {positive}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {aiSummary.concerns && aiSummary.concerns.length > 0 && (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                    <p className="text-sm font-medium text-destructive mb-2">⚠️ Concerns to Monitor</p>
+                    <ul className="text-sm space-y-1">
+                      {aiSummary.concerns.map((concern: string, i: number) => (
+                        <li key={i} className="text-muted-foreground">• {concern}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Not enough data for AI analysis yet.</p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Client Overview */}
         <div className="grid md:grid-cols-2 gap-4">

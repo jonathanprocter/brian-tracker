@@ -234,6 +234,205 @@ export const appRouter = router({
       return await db_instance.select().from(users).where(eq(users.role, 'client'));
     }),
   }),
+
+  ai: router({
+    // Generate personalized encouragement after task completion
+    getCompletionMessage: protectedProcedure
+      .input(z.object({
+        anxietyBefore: z.number(),
+        anxietyDuring: z.number(),
+        usedKlonopin: z.boolean(),
+        winNote: z.string().optional(),
+        currentStreak: z.number(),
+        taskName: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { invokeLLM } = await import("./_core/llm");
+        
+        const anxietyReduction = input.anxietyBefore - input.anxietyDuring;
+        const context = `
+Brian just completed his daily behavioral activation task.
+- Task: ${input.taskName}
+- Anxiety before: ${input.anxietyBefore}/10
+- Anxiety during: ${input.anxietyDuring}/10
+- Anxiety reduction: ${anxietyReduction} points
+- Used Klonopin: ${input.usedKlonopin ? 'Yes' : 'No'}
+- Current streak: ${input.currentStreak} days
+${input.winNote ? `- Brian's win note: "${input.winNote}"` : ''}
+`;
+
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a supportive, warm coach helping Brian with behavioral activation for anxiety. 
+Keep responses brief (2-3 sentences max), genuine, and encouraging without being over-the-top.
+Focus on specific observations from his data. Be mature and calm, not childish or overly enthusiastic.
+Never use excessive exclamation marks or emojis. Sound like a supportive friend, not a cheerleader.`
+            },
+            {
+              role: "user",
+              content: `Generate a brief, personalized encouragement message for Brian based on this completion:\n${context}`
+            }
+          ],
+        });
+
+        return {
+          message: response.choices[0]?.message?.content || "Great work today. Every step forward counts."
+        };
+      }),
+
+    // Generate weekly insights based on patterns
+    getWeeklyInsights: protectedProcedure.query(async ({ ctx }) => {
+      const { invokeLLM } = await import("./_core/llm");
+      
+      const entries = await db.getUserEntries(ctx.user.id, 14); // Last 2 weeks
+      
+      if (entries.length < 3) {
+        return {
+          insight: "Keep completing tasks to unlock personalized insights about your progress.",
+          hasEnoughData: false
+        };
+      }
+
+      const avgAnxietyBefore = entries.reduce((sum, e) => sum + e.anxietyBefore, 0) / entries.length;
+      const avgAnxietyDuring = entries.reduce((sum, e) => sum + e.anxietyDuring, 0) / entries.length;
+      const avgReduction = avgAnxietyBefore - avgAnxietyDuring;
+      const klonopinUsage = entries.filter(e => e.usedKlonopin).length;
+      const recentWins = entries.slice(0, 5).filter(e => e.winNote).map(e => e.winNote);
+
+      const context = `
+Brian's recent progress (last ${entries.length} entries):
+- Average anxiety before tasks: ${avgAnxietyBefore.toFixed(1)}/10
+- Average anxiety during tasks: ${avgAnxietyDuring.toFixed(1)}/10
+- Average anxiety reduction: ${avgReduction.toFixed(1)} points
+- Klonopin usage: ${klonopinUsage} out of ${entries.length} tasks
+- Recent wins Brian noted: ${recentWins.length > 0 ? recentWins.join('; ') : 'None noted'}
+`;
+
+      const response = await invokeLLM({
+        messages: [
+          {
+            role: "system",
+            content: `You are a supportive coach analyzing Brian's behavioral activation progress.
+Provide a brief insight (2-3 sentences) about patterns you notice.
+Be specific, warm, and constructive. Focus on progress and gentle suggestions.
+Don't be preachy or use clinical language. Sound like a supportive friend.`
+          },
+          {
+            role: "user",
+            content: `Generate a brief insight for Brian based on his recent data:\n${context}`
+          }
+        ],
+      });
+
+      return {
+        insight: response.choices[0]?.message?.content || "You're making steady progress. Keep it up.",
+        hasEnoughData: true,
+        stats: {
+          avgAnxietyBefore: avgAnxietyBefore.toFixed(1),
+          avgAnxietyDuring: avgAnxietyDuring.toFixed(1),
+          avgReduction: avgReduction.toFixed(1),
+          entriesCount: entries.length
+        }
+      };
+    }),
+
+    // Generate summary for admin/therapist
+    getClientSummary: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .query(async ({ input }) => {
+        const { invokeLLM } = await import("./_core/llm");
+        
+        const user = await db.getUserById(input.userId);
+        if (!user) throw new TRPCError({ code: 'NOT_FOUND' });
+        
+        const entries = await db.getUserEntries(input.userId, 14);
+        
+        if (entries.length < 2) {
+          return {
+            summary: "Not enough data yet for AI analysis. Brian needs to complete more tasks.",
+            concerns: [],
+            positives: []
+          };
+        }
+
+        const avgAnxietyBefore = entries.reduce((sum, e) => sum + e.anxietyBefore, 0) / entries.length;
+        const avgAnxietyDuring = entries.reduce((sum, e) => sum + e.anxietyDuring, 0) / entries.length;
+        const klonopinRate = (entries.filter(e => e.usedKlonopin).length / entries.length * 100).toFixed(0);
+        const recentWins = entries.filter(e => e.winNote).map(e => e.winNote);
+
+        const context = `
+Client: Brian
+Recent activity (${entries.length} entries over last 2 weeks):
+- Current streak: ${user.currentStreak} days
+- Longest streak: ${user.longestStreak} days
+- Current level: ${user.currentLevel}
+- Average anxiety before: ${avgAnxietyBefore.toFixed(1)}/10
+- Average anxiety during: ${avgAnxietyDuring.toFixed(1)}/10
+- Klonopin usage rate: ${klonopinRate}%
+- Recent self-reported wins: ${recentWins.length > 0 ? recentWins.join('; ') : 'None'}
+`;
+
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are an AI assistant helping a therapist monitor a client's behavioral activation progress.
+Provide a concise clinical summary (3-4 sentences) highlighting key patterns, concerns, and positives.
+Be objective and professional. Flag any concerning patterns (high anxiety, increased Klonopin use, breaks in streaks).
+Also note positive trends (consistent engagement, anxiety reduction, self-reported wins).`
+            },
+            {
+              role: "user",
+              content: `Generate a clinical summary for the therapist:\n${context}`
+            }
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "clinical_summary",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  summary: { type: "string", description: "Brief clinical summary" },
+                  concerns: { 
+                    type: "array", 
+                    items: { type: "string" },
+                    description: "List of concerns to monitor"
+                  },
+                  positives: { 
+                    type: "array", 
+                    items: { type: "string" },
+                    description: "List of positive observations"
+                  }
+                },
+                required: ["summary", "concerns", "positives"],
+                additionalProperties: false
+              }
+            }
+          }
+        });
+
+        try {
+          const content = response.choices[0]?.message?.content;
+          const contentStr = typeof content === 'string' ? content : JSON.stringify(content) || '{}';
+          const parsed = JSON.parse(contentStr);
+          return {
+            summary: parsed.summary || "Unable to generate summary.",
+            concerns: parsed.concerns || [],
+            positives: parsed.positives || []
+          };
+        } catch {
+          return {
+            summary: "Unable to parse AI response.",
+            concerns: [],
+            positives: []
+          };
+        }
+      }),
+  }),
 });
 
 // Helper function to calculate level from XP

@@ -20,6 +20,8 @@ export default function CompleteQuest() {
   const [winNote, setWinNote] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [aiMessage, setAiMessage] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const { data: currentTask, isLoading: taskLoading } = trpc.tasks.getCurrentTask.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -30,6 +32,8 @@ export default function CompleteQuest() {
   });
 
   const utils = trpc.useUtils();
+  const getAiMessage = trpc.ai.getCompletionMessage.useMutation();
+  
   const createEntry = trpc.entries.create.useMutation({
     onSuccess: (data) => {
       setResult(data);
@@ -41,6 +45,29 @@ export default function CompleteQuest() {
           particleCount: 100,
           spread: 70,
           origin: { y: 0.6 }
+        });
+      }
+      
+      // Get AI personalized message
+      if (currentTask && anxietyBefore !== null && anxietyDuring !== null) {
+        setAiLoading(true);
+        getAiMessage.mutate({
+          anxietyBefore,
+          anxietyDuring,
+          usedKlonopin,
+          winNote: winNote.trim() || undefined,
+          currentStreak: data.newStreak,
+          taskName: currentTask.taskName,
+        }, {
+          onSuccess: (aiData) => {
+            const msg = typeof aiData.message === 'string' ? aiData.message : 'Great work today.';
+            setAiMessage(msg);
+            setAiLoading(false);
+          },
+          onError: () => {
+            setAiMessage("Great work today. Every step forward counts.");
+            setAiLoading(false);
+          }
         });
       }
       
@@ -74,12 +101,12 @@ export default function CompleteQuest() {
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center space-y-4">
             <div className="text-6xl">✓</div>
-            <h2 className="text-2xl font-bold text-success">Quest Already Complete!</h2>
+            <h2 className="text-2xl font-bold text-success">Task Already Complete!</h2>
             <p className="text-muted-foreground">
-              You've already completed today's quest. Come back tomorrow for your next challenge!
+              You've already completed today's task. Come back tomorrow!
             </p>
-            <Button onClick={() => setLocation("/")} className="w-full">
-              Back to Quest Log
+            <Button onClick={() => setLocation("/")} className="w-full h-14">
+              Back to Progress
             </Button>
           </CardContent>
         </Card>
@@ -94,7 +121,7 @@ export default function CompleteQuest() {
           <CardContent className="pt-6 space-y-6">
             <div className="text-center">
               <div className="text-6xl mb-4">🎉</div>
-              <h2 className="text-2xl font-bold mb-2">QUEST COMPLETE!</h2>
+              <h2 className="text-2xl font-bold mb-2">Task Complete!</h2>
             </div>
 
             <div className="space-y-3 bg-card/50 rounded-lg p-4">
@@ -148,10 +175,19 @@ export default function CompleteQuest() {
               </div>
             )}
 
-            <div className="space-y-2">
-              <p className="text-center text-muted-foreground italic">
-                "Great work! Every step forward counts."
-              </p>
+            <div className="space-y-4">
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                {aiLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm text-muted-foreground">Generating personalized feedback...</span>
+                  </div>
+                ) : (
+                  <p className="text-center text-sm italic">
+                    "{aiMessage || 'Great work today. Every step forward counts.'}"
+                  </p>
+                )}
+              </div>
               <Button onClick={() => setLocation("/")} className="w-full h-14" size="lg">
                 Back to Progress
               </Button>

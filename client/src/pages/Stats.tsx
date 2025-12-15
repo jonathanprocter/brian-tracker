@@ -38,6 +38,10 @@ export default function Stats() {
   const { data: recentEntries } = trpc.entries.getRecent.useQuery({ limit: 20 }, {
     enabled: isAuthenticated,
   });
+  
+  const { data: aiInsights, isLoading: aiLoading } = trpc.ai.getWeeklyInsights.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
 
   if (!isAuthenticated) {
     setLocation("/");
@@ -182,7 +186,29 @@ export default function Stats() {
           </Card>
         </div>
 
-        {/* Anxiety Boss Card */}
+        {/* AI Insights Card */}
+        <Card className="bg-primary/5 border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-xl">💡</span>
+              Personalized Insights
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {aiLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <span className="ml-2 text-sm text-muted-foreground">Analyzing your progress...</span>
+              </div>
+            ) : (
+              <p className="text-sm leading-relaxed">
+                {typeof aiInsights?.insight === 'string' ? aiInsights.insight : 'Complete more tasks to unlock personalized insights.'}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Anxiety Progress Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
