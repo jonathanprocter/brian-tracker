@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,11 +34,33 @@ export default function CompleteQuest() {
 
   const utils = trpc.useUtils();
   const getAiMessage = trpc.ai.getCompletionMessage.useMutation();
+  const logActivity = trpc.activity.logEvent.useMutation();
+
+  // Log page view on mount
+  useEffect(() => {
+    if (isAuthenticated) {
+      logActivity.mutate({
+        actionType: 'task_started',
+        pagePath: '/complete',
+      });
+    }
+  }, [isAuthenticated]);
   
   const createEntry = trpc.entries.create.useMutation({
     onSuccess: (data) => {
       setResult(data);
       setShowSuccess(true);
+      
+      // Log task completion activity
+      logActivity.mutate({
+        actionType: 'task_completed',
+        pagePath: '/complete',
+        metadata: JSON.stringify({
+          xpEarned: data.xpEarned,
+          leveledUp: data.leveledUp,
+          newStreak: data.newStreak,
+        }),
+      });
       
       // Trigger confetti and sound on every task completion for positive reinforcement
       confetti({

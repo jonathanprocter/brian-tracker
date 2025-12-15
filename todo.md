@@ -195,3 +195,14 @@
 ## Bug Fixes
 - [x] Fix admin access issue when entering 5786 passcode (verified role is 'admin' in DB)
 - [x] Add logout button to Settings page for switching accounts
+
+
+## Enhanced Activity Tracking
+- [x] Create activity_logs table with timestamps, IP, user agent, action type
+- [x] Track login events with IP and device info
+- [x] Track page views and navigation patterns
+- [x] Track task completion timing (time spent on form)
+- [x] Track session duration and frequency
+- [x] Add engagement metrics to admin dashboard (login frequency, session duration, time of day patterns)
+- [x] Create engagement score algorithm based on activity patterns
+- [x] Display engagement trends over time in admin dashboard

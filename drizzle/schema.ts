@@ -93,7 +93,40 @@ export type UserAchievement = typeof userAchievements.$inferSelect;
 export type InsertUserAchievement = typeof userAchievements.$inferInsert;
 
 /**
- * Login activity tracking for admin monitoring
+ * Comprehensive activity logs for engagement tracking
+ */
+export const activityLogs = mysqlTable("activityLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  actionType: mysqlEnum("actionType", [
+    "login",
+    "logout", 
+    "page_view",
+    "task_started",
+    "task_completed",
+    "settings_viewed",
+    "stats_viewed",
+    "achievements_viewed",
+    "session_start",
+    "session_end"
+  ]).notNull(),
+  pagePath: varchar("pagePath", { length: 255 }),
+  ipAddress: varchar("ipAddress", { length: 45 }), // IPv6 compatible
+  userAgent: text("userAgent"),
+  deviceType: varchar("deviceType", { length: 50 }), // mobile, tablet, desktop
+  browser: varchar("browser", { length: 100 }),
+  os: varchar("os", { length: 100 }),
+  sessionId: varchar("sessionId", { length: 64 }),
+  sessionDuration: int("sessionDuration"), // in seconds, filled on session_end
+  metadata: text("metadata"), // JSON for additional context
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type InsertActivityLog = typeof activityLogs.$inferInsert;
+
+/**
+ * Legacy login activity tracking (kept for backward compatibility)
  */
 export const loginActivity = mysqlTable("loginActivity", {
   id: int("id").autoincrement().primaryKey(),

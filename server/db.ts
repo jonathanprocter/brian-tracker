@@ -9,10 +9,12 @@ import {
   userAchievements, 
   loginActivity,
   notificationSettings,
+  activityLogs,
   InsertEntry,
   InsertUserAchievement,
   InsertLoginActivity,
-  InsertNotificationSettings
+  InsertNotificationSettings,
+  InsertActivityLog
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -354,4 +356,145 @@ export async function getAllUserEntries(userId: number) {
   .leftJoin(tasks, eq(entries.taskId, tasks.id))
   .where(eq(entries.userId, userId))
   .orderBy(desc(entries.completedAt));
+}
+
+
+// Comprehensive activity logging
+export async function logActivity(data: InsertActivityLog) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(activityLogs).values(data);
+}
+
+export async function getActivityLogs(userId: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select()
+    .from(activityLogs)
+    .where(eq(activityLogs.userId, userId))
+    .orderBy(desc(activityLogs.createdAt))
+    .limit(limit);
+}
+
+export async function getActivityLogsByType(userId: number, actionType: string, limit: number = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select()
+    .from(activityLogs)
+    .where(and(
+      eq(activityLogs.userId, userId),
+      eq(activityLogs.actionType, actionType as any)
+    ))
+    .orderBy(desc(activityLogs.createdAt))
+    .limit(limit);
+}
+
+export async function getEngagementMetrics(userId: number, days: number = 30) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  
+  // Get all activity in the period
+  const activities = await db.select()
+    .from(activityLogs)
+    .where(and(
+      eq(activityLogs.userId, userId),
+      gte(activityLogs.createdAt, startDate)
+    ))
+    .orderBy(desc(activityLogs.createdAt));
+  
+  // Calculate metrics
+  const loginCount = activities.filter(a => a.actionType === 'login').length;
+  const taskCompletions = activities.filter(a => a.actionType === 'task_completed').length;
+  const pageViews = activities.filter(a => a.actionType === 'page_view').length;
+  const uniqueDays = new Set(activities.map(a => 
+    new Date(a.createdAt).toISOString().split('T')[0]
+  )).size;
+  
+  // Calculate average session duration from session_end events
+  const sessionEnds = activities.filter(a => a.actionType === 'session_end' && a.sessionDuration);
+  const avgSessionDuration = sessionEnds.length > 0 
+    ? sessionEnds.reduce((sum, s) => sum + (s.sessionDuration || 0), 0) / sessionEnds.length 
+    : 0;
+  
+  // Time of day analysis
+  const hourCounts: Record<number, number> = {};
+  activities.forEach(a => {
+    const hour = new Date(a.createdAt).getHours();
+    hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+  });
+  const peakHour = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+  
+  // Device breakdown
+  const deviceCounts: Record<string, number> = {};
+  activities.forEach(a => {
+    if (a.deviceType) {
+      deviceCounts[a.deviceType] = (deviceCounts[a.deviceType] || 0) + 1;
+    }
+  });
+  
+  // Calculate engagement score (0-100)
+  // Based on: login frequency, task completion rate, session duration, consistency
+  const maxLogins = days; // Max 1 login per day
+  const loginScore = Math.min((loginCount / maxLogins) * 25, 25);
+  const taskScore = Math.min((taskCompletions / days) * 25, 25);
+  const consistencyScore = Math.min((uniqueDays / days) * 25, 25);
+  const sessionScore = Math.min((avgSessionDuration / 300) * 25, 25); // 5 min = max
+  const engagementScore = Math.round(loginScore + taskScore + consistencyScore + sessionScore);
+  
+  return {
+    period: days,
+    totalActivities: activities.length,
+    loginCount,
+    taskCompletions,
+    pageViews,
+    uniqueDays,
+    avgSessionDuration: Math.round(avgSessionDuration),
+    peakHour: peakHour ? parseInt(peakHour) : null,
+    deviceBreakdown: deviceCounts,
+    engagementScore,
+    recentActivity: activities.slice(0, 10),
+  };
+}
+
+export async function getActivityTimeline(userId: number, days: number = 7) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  
+  const activities = await db.select()
+    .from(activityLogs)
+    .where(and(
+      eq(activityLogs.userId, userId),
+      gte(activityLogs.createdAt, startDate)
+    ))
+    .orderBy(desc(activityLogs.createdAt));
+  
+  // Group by day
+  const timeline: Record<string, { date: string; activities: number; logins: number; tasks: number }> = {};
+  
+  for (let i = 0; i < days; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    timeline[dateStr] = { date: dateStr, activities: 0, logins: 0, tasks: 0 };
+  }
+  
+  activities.forEach(a => {
+    const dateStr = new Date(a.createdAt).toISOString().split('T')[0];
+    if (timeline[dateStr]) {
+      timeline[dateStr].activities++;
+      if (a.actionType === 'login') timeline[dateStr].logins++;
+      if (a.actionType === 'task_completed') timeline[dateStr].tasks++;
+    }
+  });
+  
+  return Object.values(timeline).sort((a, b) => a.date.localeCompare(b.date));
 }

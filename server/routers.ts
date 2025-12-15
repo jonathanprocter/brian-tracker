@@ -725,6 +725,90 @@ Also note positive trends (consistent engagement, anxiety reduction, self-report
         }
       }),
   }),
+
+  // Activity tracking for engagement monitoring
+  activity: router({
+    // Log an activity event
+    logEvent: protectedProcedure
+      .input(z.object({
+        actionType: z.enum([
+          'login', 'logout', 'page_view', 'task_started', 'task_completed',
+          'settings_viewed', 'stats_viewed', 'achievements_viewed', 'session_start', 'session_end'
+        ]),
+        pagePath: z.string().optional(),
+        sessionId: z.string().optional(),
+        sessionDuration: z.number().optional(),
+        metadata: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Extract IP and user agent from request
+        const ipAddress = ctx.req.headers['x-forwarded-for']?.toString().split(',')[0] ||
+                         ctx.req.headers['x-real-ip']?.toString() ||
+                         ctx.req.socket?.remoteAddress || null;
+        const userAgent = ctx.req.headers['user-agent'] || null;
+        
+        // Parse user agent for device info
+        let deviceType = 'desktop';
+        let browser = 'Unknown';
+        let os = 'Unknown';
+        
+        if (userAgent) {
+          // Device type detection
+          if (/mobile/i.test(userAgent)) deviceType = 'mobile';
+          else if (/tablet|ipad/i.test(userAgent)) deviceType = 'tablet';
+          
+          // Browser detection
+          if (/chrome/i.test(userAgent) && !/edge/i.test(userAgent)) browser = 'Chrome';
+          else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) browser = 'Safari';
+          else if (/firefox/i.test(userAgent)) browser = 'Firefox';
+          else if (/edge/i.test(userAgent)) browser = 'Edge';
+          
+          // OS detection
+          if (/iphone|ipad/i.test(userAgent)) os = 'iOS';
+          else if (/android/i.test(userAgent)) os = 'Android';
+          else if (/mac/i.test(userAgent)) os = 'macOS';
+          else if (/windows/i.test(userAgent)) os = 'Windows';
+          else if (/linux/i.test(userAgent)) os = 'Linux';
+        }
+        
+        await db.logActivity({
+          userId: ctx.user.id,
+          actionType: input.actionType,
+          pagePath: input.pagePath || null,
+          ipAddress,
+          userAgent,
+          deviceType,
+          browser,
+          os,
+          sessionId: input.sessionId || null,
+          sessionDuration: input.sessionDuration || null,
+          metadata: input.metadata || null,
+        });
+        
+        return { success: true };
+      }),
+
+    // Get activity logs for a user (admin only)
+    getLogs: adminProcedure
+      .input(z.object({ userId: z.number(), limit: z.number().optional() }))
+      .query(async ({ input }) => {
+        return await db.getActivityLogs(input.userId, input.limit || 50);
+      }),
+
+    // Get engagement metrics for a user (admin only)
+    getEngagement: adminProcedure
+      .input(z.object({ userId: z.number(), days: z.number().optional() }))
+      .query(async ({ input }) => {
+        return await db.getEngagementMetrics(input.userId, input.days || 30);
+      }),
+
+    // Get activity timeline for charts (admin only)
+    getTimeline: adminProcedure
+      .input(z.object({ userId: z.number(), days: z.number().optional() }))
+      .query(async ({ input }) => {
+        return await db.getActivityTimeline(input.userId, input.days || 7);
+      }),
+  }),
 });
 
 // Helper function to calculate level from XP

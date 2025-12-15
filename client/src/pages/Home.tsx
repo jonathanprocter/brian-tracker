@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,10 +36,33 @@ export default function Home() {
     enabled: isAuthenticated,
     staleTime: 30 * 60 * 1000, // Cache for 30 minutes
   });
+
+  // Activity tracking
+  const logActivity = trpc.activity.logEvent.useMutation();
+  
+  // Log login and page view on mount
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Check if this is a fresh login (no session flag)
+      const hasLoggedSession = sessionStorage.getItem('logged_session');
+      if (!hasLoggedSession) {
+        sessionStorage.setItem('logged_session', 'true');
+        logActivity.mutate({
+          actionType: 'login',
+          pagePath: '/',
+        });
+      }
+      logActivity.mutate({
+        actionType: 'page_view',
+        pagePath: '/',
+      });
+    }
+  }, [isAuthenticated]);
   
   const loginMutation = trpc.auth.passcodeLogin.useMutation({
     onSuccess: (data) => {
       toast.success(`Welcome, ${data.name}!`);
+      // Log login activity will happen after reload when authenticated
       if (data.role === 'admin') {
         setLocation('/admin');
       } else {

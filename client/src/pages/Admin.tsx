@@ -33,6 +33,21 @@ export default function Admin() {
     { enabled: !!brianId }
   );
 
+  const { data: engagement } = trpc.activity.getEngagement.useQuery(
+    { userId: brianId!, days: 30 },
+    { enabled: !!brianId }
+  );
+
+  const { data: activityTimeline } = trpc.activity.getTimeline.useQuery(
+    { userId: brianId!, days: 14 },
+    { enabled: !!brianId }
+  );
+
+  const { data: activityLogs } = trpc.activity.getLogs.useQuery(
+    { userId: brianId!, limit: 20 },
+    { enabled: !!brianId }
+  );
+
   const { data: exportData, refetch: refetchExport, isFetching: isExporting } = trpc.admin.exportClientData.useQuery(
     { userId: brianId! },
     { enabled: false } // Only fetch on demand
@@ -335,7 +350,66 @@ export default function Admin() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Engagement Metrics</CardTitle>
+              <CardTitle>Engagement Score</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {engagement ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <div className={`text-4xl font-bold ${engagement.engagementScore >= 70 ? 'text-success' : engagement.engagementScore >= 40 ? 'text-amber-500' : 'text-destructive'}`}>
+                      {engagement.engagementScore}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <p>out of 100</p>
+                      <p className="text-xs">{engagement.engagementScore >= 70 ? 'High engagement' : engagement.engagementScore >= 40 ? 'Moderate engagement' : 'Low engagement'}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Logins (30d)</p>
+                      <p className="font-bold">{engagement.loginCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Tasks (30d)</p>
+                      <p className="font-bold">{engagement.taskCompletions}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Active Days</p>
+                      <p className="font-bold">{engagement.uniqueDays}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Avg Session</p>
+                      <p className="font-bold">{engagement.avgSessionDuration > 60 ? `${Math.round(engagement.avgSessionDuration / 60)}m` : `${engagement.avgSessionDuration}s`}</p>
+                    </div>
+                  </div>
+                  {engagement.peakHour !== null && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Peak Activity Hour</p>
+                      <p className="font-bold">{engagement.peakHour}:00 - {engagement.peakHour + 1}:00</p>
+                    </div>
+                  )}
+                  {engagement.deviceBreakdown && Object.keys(engagement.deviceBreakdown).length > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Device Usage</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {Object.entries(engagement.deviceBreakdown).map(([device, count]) => (
+                          <span key={device} className="text-xs bg-muted px-2 py-1 rounded">
+                            {device}: {count as number}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No engagement data yet</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Login Activity</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
@@ -450,6 +524,64 @@ export default function Admin() {
             ) : (
               <p className="text-center text-muted-foreground py-8">
                 No entries yet
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Activity Log Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5" />
+              Recent Activity Log
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {activityLogs && activityLogs.length > 0 ? (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {activityLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="flex items-center justify-between p-2 bg-card/50 rounded border border-border text-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">
+                        {log.actionType === 'login' ? '🔑' :
+                         log.actionType === 'task_completed' ? '✅' :
+                         log.actionType === 'page_view' ? '👁️' :
+                         log.actionType === 'session_start' ? '▶️' :
+                         log.actionType === 'session_end' ? '⏹️' : '📍'}
+                      </span>
+                      <div>
+                        <p className="font-medium capitalize">{log.actionType.replace('_', ' ')}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {log.pagePath && `${log.pagePath} • `}
+                          {log.deviceType} • {log.browser} • {log.os}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(log.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                      {log.ipAddress && (
+                        <p className="text-xs text-muted-foreground font-mono">
+                          {log.ipAddress}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">
+                No activity logged yet. Activity will appear as Brian uses the app.
               </p>
             )}
           </CardContent>
