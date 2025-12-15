@@ -69,11 +69,11 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-32">
       {/* Header */}
       <div className="bg-card border-b border-border p-4">
         <div className="container max-w-2xl">
-          <h1 className="text-2xl font-bold">🎮 {user?.name}'s Quest Log</h1>
+          <h1 className="text-2xl font-bold">🎮 Brian's Quest Log</h1>
           <p className="text-sm text-muted-foreground">Your path to defeating Anxiety Boss</p>
         </div>
       </div>
@@ -231,26 +231,26 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+      {/* Bottom Navigation - iPhone optimized */}
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-bottom">
         <div className="container max-w-2xl">
-          <div className="grid grid-cols-3 gap-2 p-4">
-            <Button variant="ghost" asChild className="flex-col h-16">
+          <div className="grid grid-cols-3 gap-3 p-4 pb-6">
+            <Button variant="ghost" asChild className="flex-col h-20 text-primary">
               <Link href="/">
-                <Calendar className="w-5 h-5 mb-1" />
-                <span className="text-xs">Quest Log</span>
+                <Calendar className="w-7 h-7 mb-1" />
+                <span className="text-sm font-medium">Quest Log</span>
               </Link>
             </Button>
-            <Button variant="ghost" asChild className="flex-col h-16">
+            <Button variant="ghost" asChild className="flex-col h-20">
               <Link href="/stats">
-                <TrendingUp className="w-5 h-5 mb-1" />
-                <span className="text-xs">Stats</span>
+                <TrendingUp className="w-7 h-7 mb-1" />
+                <span className="text-sm font-medium">Stats</span>
               </Link>
             </Button>
-            <Button variant="ghost" asChild className="flex-col h-16">
+            <Button variant="ghost" asChild className="flex-col h-20">
               <Link href="/achievements">
-                <Trophy className="w-5 h-5 mb-1" />
-                <span className="text-xs">Achievements</span>
+                <Trophy className="w-7 h-7 mb-1" />
+                <span className="text-sm font-medium">Achievements</span>
               </Link>
             </Button>
           </div>

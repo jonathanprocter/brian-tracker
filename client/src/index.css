@@ -116,13 +116,137 @@
   color: oklch(var(--anxiety-low));
 }
 
-/* iPhone safe area support */
+/* ========================================
+   iPhone-First Mobile Optimization
+   ======================================== */
+
+/* Safe area support for notch/Dynamic Island */
 @supports (padding: max(0px)) {
   body {
     padding-left: max(0px, env(safe-area-inset-left));
     padding-right: max(0px, env(safe-area-inset-right));
     padding-bottom: max(0px, env(safe-area-inset-bottom));
+    padding-top: env(safe-area-inset-top);
   }
+  
+  /* Bottom navigation safe area */
+  .fixed.bottom-0 {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Minimum tap target size - Apple HIG recommends 44pt */
+button,
+a,
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Touch-friendly form inputs */
+input,
+textarea,
+select {
+  font-size: 16px !important; /* Prevents iOS zoom on focus */
+  min-height: 48px;
+  padding: 12px 16px;
+}
+
+/* Active state feedback for touch */
+button:active,
+a:active,
+[role="button"]:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+/* Smooth scrolling for iOS */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent text selection on interactive elements */
+button,
+a,
+[role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection in inputs */
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Optimized font sizes for mobile readability */
+body {
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Larger touch targets for anxiety scale buttons */
+.anxiety-button {
+  min-width: 48px;
+  min-height: 48px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Bottom navigation optimization for thumb reach */
+.bottom-nav-item {
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* Card touch feedback */
+.card-interactive:active {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Prevent double-tap zoom */
+* {
+  touch-action: manipulation;
+}
+
+/* Momentum scrolling for lists */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Larger checkbox/radio for touch */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 24px;
+  height: 24px;
+}
+
+/* Success/completion state with green background */
+.bg-success {
+  background-color: oklch(0.7 0.18 160);
+}
+
+/* XP bar with proper gradient */
+.xp-bar-gradient {
+  background: linear-gradient(90deg, #FBBF24, #F59E0B);
+}
+
+/* Streak fire color */
+.streak-fire {
+  color: #F97316;
 }
 
 @layer base {

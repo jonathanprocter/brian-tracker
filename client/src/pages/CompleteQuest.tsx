@@ -216,13 +216,13 @@ export default function CompleteQuest() {
 
             {/* Anxiety Before */}
             <div className="space-y-3">
-              <Label className="text-base">Anxiety BEFORE task (0-10)</Label>
-              <div className="grid grid-cols-11 gap-2">
+              <Label className="text-base font-semibold">Anxiety BEFORE task (0-10)</Label>
+              <div className="grid grid-cols-6 gap-3">
                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
                   <Button
                     key={level}
                     variant={anxietyBefore === level ? "default" : "outline"}
-                    className={`h-12 ${anxietyBefore === level ? '' : getAnxietyColor(level)}`}
+                    className={`h-14 text-lg font-bold ${anxietyBefore === level ? '' : getAnxietyColor(level)}`}
                     onClick={() => setAnxietyBefore(level)}
                   >
                     {level}
@@ -261,13 +261,13 @@ export default function CompleteQuest() {
 
             {/* Anxiety During */}
             <div className="space-y-3">
-              <Label className="text-base">Anxiety DURING task (0-10)</Label>
-              <div className="grid grid-cols-11 gap-2">
+              <Label className="text-base font-semibold">Anxiety DURING task (0-10)</Label>
+              <div className="grid grid-cols-6 gap-3">
                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
                   <Button
                     key={level}
                     variant={anxietyDuring === level ? "default" : "outline"}
-                    className={`h-12 ${anxietyDuring === level ? '' : getAnxietyColor(level)}`}
+                    className={`h-14 text-lg font-bold ${anxietyDuring === level ? '' : getAnxietyColor(level)}`}
                     onClick={() => setAnxietyDuring(level)}
                   >
                     {level}
@@ -278,15 +278,15 @@ export default function CompleteQuest() {
 
             {/* Klonopin Usage */}
             <div className="space-y-3">
-              <Label className="text-base">Did you use Klonopin?</Label>
+              <Label className="text-base font-semibold">Did you use Klonopin?</Label>
               <RadioGroup value={usedKlonopin ? "yes" : "no"} onValueChange={(val) => setUsedKlonopin(val === "yes")}>
-                <div className="flex items-center space-x-2 p-3 rounded-lg border border-border">
-                  <RadioGroupItem value="yes" id="klonopin-yes" />
-                  <Label htmlFor="klonopin-yes" className="flex-1 cursor-pointer">Yes</Label>
+                <div className="flex items-center space-x-3 p-4 rounded-lg border border-border min-h-[56px]">
+                  <RadioGroupItem value="yes" id="klonopin-yes" className="w-6 h-6" />
+                  <Label htmlFor="klonopin-yes" className="flex-1 cursor-pointer text-base">Yes</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg border border-border">
-                  <RadioGroupItem value="no" id="klonopin-no" />
-                  <Label htmlFor="klonopin-no" className="flex-1 cursor-pointer">
+                <div className="flex items-center space-x-3 p-4 rounded-lg border border-border min-h-[56px]">
+                  <RadioGroupItem value="no" id="klonopin-no" className="w-6 h-6" />
+                  <Label htmlFor="klonopin-no" className="flex-1 cursor-pointer text-base">
                     No <span className="text-success text-sm ml-2">(+25 XP Bonus!)</span>
                   </Label>
                 </div>

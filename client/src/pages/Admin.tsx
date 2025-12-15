@@ -138,7 +138,7 @@ export default function Admin() {
       {/* Header */}
       <div className="bg-card border-b border-border p-4 sticky top-0 z-10">
         <div className="container max-w-4xl">
-          <h1 className="text-xl font-bold">👨‍⚕️ Admin Dashboard</h1>
+          <h1 className="text-xl font-bold">👨‍⚕️ 5786 Admin Dashboard</h1>
           <p className="text-sm text-muted-foreground">Monitoring Brian's Progress</p>
         </div>
       </div>

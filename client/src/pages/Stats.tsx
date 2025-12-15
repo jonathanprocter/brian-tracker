@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, TrendingDown, TrendingUp, Trophy, Flame, Target } from "lucide-react";
+import { ArrowLeft, TrendingDown, TrendingUp, Trophy, Flame, Target, Calendar } from "lucide-react";
 import { useLocation } from "wouter";
 import { Line } from "react-chartjs-2";
 import {
@@ -132,7 +132,7 @@ export default function Stats() {
   const trend = firstHalfAvg - secondHalfAvg;
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-32">
       {/* Header */}
       <div className="bg-card border-b border-border p-4 sticky top-0 z-10">
         <div className="container max-w-2xl flex items-center gap-3">
@@ -322,21 +322,21 @@ export default function Stats() {
         </Card>
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+      {/* Bottom Navigation - iPhone optimized */}
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-bottom">
         <div className="container max-w-2xl">
-          <div className="grid grid-cols-3 gap-2 p-4">
-            <Button variant="ghost" onClick={() => setLocation("/")} className="flex-col h-16">
-              <span className="text-2xl mb-1">📅</span>
-              <span className="text-xs">Quest Log</span>
+          <div className="grid grid-cols-3 gap-3 p-4 pb-6">
+            <Button variant="ghost" onClick={() => setLocation("/")} className="flex-col h-20">
+              <Calendar className="w-7 h-7 mb-1" />
+              <span className="text-sm font-medium">Quest Log</span>
             </Button>
-            <Button variant="default" className="flex-col h-16">
-              <TrendingUp className="w-5 h-5 mb-1" />
-              <span className="text-xs">Stats</span>
+            <Button variant="default" className="flex-col h-20">
+              <TrendingUp className="w-7 h-7 mb-1" />
+              <span className="text-sm font-medium">Stats</span>
             </Button>
-            <Button variant="ghost" onClick={() => setLocation("/achievements")} className="flex-col h-16">
-              <Trophy className="w-5 h-5 mb-1" />
-              <span className="text-xs">Achievements</span>
+            <Button variant="ghost" onClick={() => setLocation("/achievements")} className="flex-col h-20">
+              <Trophy className="w-7 h-7 mb-1" />
+              <span className="text-sm font-medium">Achievements</span>
             </Button>
           </div>
         </div>

@@ -108,3 +108,19 @@
 - [ ] Verify PWA installation on iPhone
 - [ ] Test offline capability
 - [ ] Deploy to manus.space domain
+
+
+## User Customization
+- [x] Update Brian's display name to show "Brian"
+- [x] Update Jonathan's display name to show "5786"
+
+
+## Enhanced iPhone Optimization
+- [x] Increase all tap targets to 48x48pt minimum
+- [x] Add haptic feedback simulation with visual feedback (active states)
+- [x] Optimize font sizes for mobile readability (16px minimum)
+- [x] Ensure all buttons have proper touch states
+- [ ] Add pull-to-refresh gesture support - Future enhancement
+- [x] Optimize bottom navigation for thumb reach (h-20, larger icons)
+- [ ] Add swipe gestures where appropriate - Future enhancement
+- [x] Ensure proper spacing for fat-finger friendly UI
