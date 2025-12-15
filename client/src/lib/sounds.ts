@@ -67,3 +67,22 @@ export function playLevelUpSound() {
     console.log('Audio not supported');
   }
 }
+
+// Haptic feedback using Vibration API
+export function triggerHapticFeedback(pattern: 'success' | 'levelUp' = 'success') {
+  try {
+    // Check if Vibration API is supported
+    if ('vibrate' in navigator) {
+      if (pattern === 'levelUp') {
+        // Longer, more celebratory pattern for level up
+        navigator.vibrate([50, 50, 50, 50, 100]);
+      } else {
+        // Short, subtle vibration for task completion
+        navigator.vibrate([30, 30, 50]);
+      }
+    }
+  } catch (e) {
+    // Silently fail if vibration is not supported
+    console.log('Vibration not supported');
+  }
+}

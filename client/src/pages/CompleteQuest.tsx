@@ -10,7 +10,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
-import { playCelebrationSound, playLevelUpSound } from "@/lib/sounds";
+import { playCelebrationSound, playLevelUpSound, triggerHapticFeedback } from "@/lib/sounds";
 
 export default function CompleteQuest() {
   const [, setLocation] = useLocation();
@@ -48,6 +48,7 @@ export default function CompleteQuest() {
         colors: ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6']
       });
       playCelebrationSound();
+      triggerHapticFeedback('success');
       
       // Extra confetti burst and fanfare if leveled up
       if (data.leveledUp) {
@@ -59,6 +60,7 @@ export default function CompleteQuest() {
             colors: ['#fbbf24', '#f59e0b', '#d97706']
           });
           playLevelUpSound();
+          triggerHapticFeedback('levelUp');
         }, 300);
       }
       

@@ -188,3 +188,5 @@
 ## Confetti Animation
 -- [x] Add confetti animation on task completion for positive reinforcement
 - [x] Add celebration sound effect with confetti animation
+
+- [x] Add haptic feedback on task completion using Vibration API
