@@ -495,6 +495,141 @@ Don't be preachy or use clinical language. Sound like a supportive friend.`
       };
     }),
 
+    // Dynamic greeting and motivation for home screen
+    getDynamicGreeting: protectedProcedure.query(async ({ ctx }) => {
+      const { invokeLLM } = await import("./_core/llm");
+      
+      const user = await db.getUserById(ctx.user.id);
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND' });
+      
+      const entries = await db.getUserEntries(ctx.user.id, 7);
+      const todayEntry = await db.getEntryForDate(ctx.user.id, new Date());
+      
+      const hour = new Date().getHours();
+      let timeOfDay = 'morning';
+      if (hour >= 12 && hour < 17) timeOfDay = 'afternoon';
+      else if (hour >= 17) timeOfDay = 'evening';
+      
+      const context = `
+Time: ${timeOfDay}
+User: Brian
+Current streak: ${user.currentStreak} days
+Longest streak: ${user.longestStreak} days
+Current level: ${user.currentLevel}
+Total XP: ${user.totalXp}
+Tasks completed this week: ${entries.length}
+Already completed today: ${todayEntry ? 'Yes' : 'No'}
+Streak at risk: ${user.currentStreak > 0 && !todayEntry ? 'Yes' : 'No'}
+`;
+
+      const response = await invokeLLM({
+        messages: [
+          {
+            role: "system",
+            content: `You are a supportive, warm companion helping Brian with his daily behavioral activation.
+Generate a brief, personalized greeting (1-2 sentences) based on the context.
+Be genuine and specific. If his streak is at risk, gently encourage without pressure.
+If he already completed today, acknowledge it warmly.
+Match the time of day in your greeting. Never use excessive punctuation or emojis.
+Sound like a calm, supportive friend - not a cheerleader or therapist.`
+          },
+          {
+            role: "user",
+            content: `Generate a personalized greeting for Brian:\n${context}`
+          }
+        ],
+      });
+
+      return {
+        greeting: response.choices[0]?.message?.content || `Good ${timeOfDay}, Brian.`,
+        streakAtRisk: user.currentStreak > 0 && !todayEntry,
+        completedToday: !!todayEntry,
+      };
+    }),
+
+    // Get tip of the day based on recent patterns
+    getTipOfDay: protectedProcedure.query(async ({ ctx }) => {
+      const { invokeLLM } = await import("./_core/llm");
+      
+      const entries = await db.getUserEntries(ctx.user.id, 10);
+      const user = await db.getUserById(ctx.user.id);
+      
+      if (entries.length < 2) {
+        return {
+          tip: "Start with small steps. Even a brief moment outside counts as progress.",
+          category: "getting-started"
+        };
+      }
+
+      const avgAnxietyBefore = entries.reduce((sum, e) => sum + e.anxietyBefore, 0) / entries.length;
+      const avgAnxietyDuring = entries.reduce((sum, e) => sum + e.anxietyDuring, 0) / entries.length;
+      const klonopinRate = entries.filter(e => e.usedKlonopin).length / entries.length;
+      const recentTrend = entries.length >= 3 ? 
+        (entries[0].anxietyDuring - entries[entries.length - 1].anxietyDuring) : 0;
+
+      const context = `
+Brian's patterns:
+- Average anxiety before: ${avgAnxietyBefore.toFixed(1)}/10
+- Average anxiety during: ${avgAnxietyDuring.toFixed(1)}/10
+- Klonopin usage rate: ${(klonopinRate * 100).toFixed(0)}%
+- Recent trend: ${recentTrend > 0 ? 'Anxiety increasing' : recentTrend < 0 ? 'Anxiety decreasing' : 'Stable'}
+- Current streak: ${user?.currentStreak || 0} days
+- Total tasks completed: ${entries.length}
+`;
+
+      const response = await invokeLLM({
+        messages: [
+          {
+            role: "system",
+            content: `You are a supportive coach providing a daily tip for Brian's behavioral activation journey.
+Generate ONE brief, actionable tip (1-2 sentences) based on his patterns.
+Be specific and practical. If anxiety is high, suggest grounding techniques.
+If Klonopin use is frequent, gently encourage trying without when ready.
+If he's doing well, reinforce what's working. Never be preachy.`
+          },
+          {
+            role: "user",
+            content: `Generate a personalized tip for Brian:\n${context}`
+          }
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "daily_tip",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                tip: { type: "string", description: "The actionable tip" },
+                category: { 
+                  type: "string", 
+                  enum: ["anxiety-management", "motivation", "progress", "technique", "celebration"],
+                  description: "Category of the tip"
+                }
+              },
+              required: ["tip", "category"],
+              additionalProperties: false
+            }
+          }
+        }
+      });
+
+      try {
+        const content = response.choices[0]?.message?.content;
+        const contentStr = typeof content === 'string' ? content : JSON.stringify(content) || '{}';
+        const parsed = JSON.parse(contentStr);
+        return {
+          tip: parsed.tip || "Take it one step at a time. You're doing great.",
+          category: parsed.category || "motivation"
+        };
+      } catch {
+        return {
+          tip: "Remember: the goal isn't perfection, it's progress.",
+          category: "motivation"
+        };
+      }
+    }),
+
     // Generate summary for admin/therapist
     getClientSummary: adminProcedure
       .input(z.object({ userId: z.number() }))

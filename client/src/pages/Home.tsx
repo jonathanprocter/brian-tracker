@@ -27,6 +27,16 @@ export default function Home() {
     enabled: isAuthenticated,
   });
   
+  // AI-powered dynamic content
+  const { data: aiGreeting } = trpc.ai.getDynamicGreeting.useQuery(undefined, {
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+  const { data: aiTip } = trpc.ai.getTipOfDay.useQuery(undefined, {
+    enabled: isAuthenticated,
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+  });
+  
   const loginMutation = trpc.auth.passcodeLogin.useMutation({
     onSuccess: (data) => {
       toast.success(`Welcome, ${data.name}!`);
@@ -118,7 +128,9 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">Brian's Progress</h1>
-              <p className="text-sm text-muted-foreground">Daily check-in and progress tracking</p>
+              <p className="text-sm text-muted-foreground">
+                {typeof aiGreeting?.greeting === 'string' ? aiGreeting.greeting : "Daily check-in and progress tracking"}
+              </p>
             </div>
             <Link href="/settings">
               <Button variant="ghost" size="icon" className="h-12 w-12">
@@ -180,6 +192,17 @@ export default function Home() {
             </div>
           </CardContent>
         </Card>
+
+        {/* AI Tip of the Day */}
+        {aiTip && (
+          <Card className="bg-primary/5 border-primary/20">
+            <CardContent className="pt-4">
+              <p className="text-sm text-foreground/90">
+                <span className="font-medium text-primary">Tip:</span> {typeof aiTip.tip === 'string' ? aiTip.tip : ''}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* This Week Progress */}
         <Card>
