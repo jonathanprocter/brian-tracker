@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
-import { Flame, Trophy, TrendingUp, Calendar } from "lucide-react";
+import { Flame, Trophy, TrendingUp, Calendar, Settings } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 
@@ -73,8 +73,17 @@ export default function Home() {
       {/* Header */}
       <div className="bg-card border-b border-border p-4">
         <div className="container max-w-2xl">
-          <h1 className="text-2xl font-bold">Brian's Progress</h1>
-          <p className="text-sm text-muted-foreground">Daily check-in and progress tracking</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Brian's Progress</h1>
+              <p className="text-sm text-muted-foreground">Daily check-in and progress tracking</p>
+            </div>
+            <Link href="/settings">
+              <Button variant="ghost" size="icon" className="h-12 w-12">
+                <Settings className="w-5 h-5" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 

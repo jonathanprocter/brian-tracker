@@ -154,3 +154,10 @@
 - [x] Add AI-generated motivational message on success screen
 - [x] Add AI-powered insights on Stats page
 - [x] Create AI summary for admin dashboard
+
+
+## Push Notifications & CSV Export
+- [x] Set up push notification system for daily reminders
+- [x] Create notification settings UI for Brian
+- [x] Add CSV export button to admin dashboard
+- [x] Implement CSV generation for all client data

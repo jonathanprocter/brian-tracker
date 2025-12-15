@@ -9,6 +9,7 @@ import CompleteQuest from "./pages/CompleteQuest";
 import Stats from "./pages/Stats";
 import Achievements from "./pages/Achievements";
 import Admin from "./pages/Admin";
+import Settings from "./pages/Settings";
 
 function Router() {
   return (
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/stats" component={Stats} />
       <Route path="/achievements" component={Achievements} />
       <Route path="/admin" component={Admin} />
+      <Route path="/settings" component={Settings} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

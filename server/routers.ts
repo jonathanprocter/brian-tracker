@@ -233,6 +233,121 @@ export const appRouter = router({
       
       return await db_instance.select().from(users).where(eq(users.role, 'client'));
     }),
+    
+    // CSV Export for client data
+    exportClientData: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .query(async ({ input }) => {
+        const user = await db.getUserById(input.userId);
+        if (!user) throw new TRPCError({ code: 'NOT_FOUND' });
+        
+        const entries = await db.getAllUserEntries(input.userId);
+        const achievements = await db.getUserAchievements(input.userId);
+        
+        // Format entries for CSV
+        const csvData = entries.map(entry => ({
+          date: entry.completedAt ? new Date(entry.completedAt).toISOString().split('T')[0] : '',
+          week: entry.weekNumber || 0,
+          task: entry.taskName || '',
+          anxietyBefore: entry.anxietyBefore,
+          anxietyDuring: entry.anxietyDuring,
+          anxietyReduction: entry.anxietyBefore - entry.anxietyDuring,
+          usedKlonopin: entry.usedKlonopin ? 'Yes' : 'No',
+          winNote: entry.winNote || '',
+          xpEarned: entry.xpEarned,
+        }));
+        
+        return {
+          user: {
+            name: user.name,
+            currentWeek: user.currentWeek,
+            currentLevel: user.currentLevel,
+            totalXp: user.totalXp,
+            currentStreak: user.currentStreak,
+            longestStreak: user.longestStreak,
+          },
+          entries: csvData,
+          achievementsUnlocked: achievements.length,
+          totalEntries: entries.length,
+        };
+      }),
+  }),
+
+  notifications: router({
+    // Get user's notification settings
+    getSettings: protectedProcedure.query(async ({ ctx }) => {
+      const settings = await db.getNotificationSettings(ctx.user.id);
+      return settings || { enabled: false, reminderTime: '09:00' };
+    }),
+    
+    // Update notification settings
+    updateSettings: protectedProcedure
+      .input(z.object({
+        enabled: z.boolean(),
+        reminderTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)'),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.upsertNotificationSettings(ctx.user.id, input);
+      }),
+    
+    // Send test notification (for admin to test the system)
+    sendTestNotification: adminProcedure.mutation(async () => {
+      const { notifyOwner } = await import("./_core/notification");
+      
+      const success = await notifyOwner({
+        title: "Brian's Progress Tracker - Test",
+        content: "This is a test notification to verify the notification system is working.",
+      });
+      
+      return { success };
+    }),
+    
+    // Trigger daily reminder check (can be called by cron job)
+    checkAndSendReminders: adminProcedure.mutation(async () => {
+      const { notifyOwner } = await import("./_core/notification");
+      
+      // Get all users needing notification
+      const usersToNotify = await db.getUsersNeedingNotification();
+      const now = new Date();
+      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      
+      let notificationsSent = 0;
+      
+      for (const userSettings of usersToNotify) {
+        // Check if it's time to send (within 5 minute window)
+        const [targetHour, targetMinute] = userSettings.reminderTime.split(':').map(Number);
+        const [currentHour, currentMinute] = currentTime.split(':').map(Number);
+        
+        const targetMinutes = targetHour * 60 + targetMinute;
+        const currentMinutes = currentHour * 60 + currentMinute;
+        
+        if (Math.abs(currentMinutes - targetMinutes) <= 5) {
+          // Check if already notified today
+          const lastNotified = userSettings.lastNotifiedAt;
+          const today = new Date().toDateString();
+          
+          if (!lastNotified || new Date(lastNotified).toDateString() !== today) {
+            // Check if user already completed today's task
+            const todayEntry = await db.getEntryForDate(userSettings.userId, new Date());
+            
+            if (!todayEntry) {
+              // Send notification
+              const success = await notifyOwner({
+                title: "Daily Task Reminder",
+                content: "Hey Brian! Don't forget to complete your daily task. Every step forward counts!",
+              });
+              
+              if (success) {
+                await db.updateLastNotified(userSettings.userId);
+                notificationsSent++;
+              }
+            }
+          }
+        }
+      }
+      
+      return { notificationsSent, usersChecked: usersToNotify.length };
+    }),
   }),
 
   ai: router({

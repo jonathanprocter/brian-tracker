@@ -104,3 +104,20 @@ export const loginActivity = mysqlTable("loginActivity", {
 
 export type LoginActivity = typeof loginActivity.$inferSelect;
 export type InsertLoginActivity = typeof loginActivity.$inferInsert;
+
+
+/**
+ * User notification settings for daily reminders
+ */
+export const notificationSettings = mysqlTable("notificationSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  enabled: boolean("enabled").default(true).notNull(),
+  reminderTime: varchar("reminderTime", { length: 5 }).default("09:00").notNull(), // HH:MM format
+  lastNotifiedAt: timestamp("lastNotifiedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NotificationSettings = typeof notificationSettings.$inferSelect;
+export type InsertNotificationSettings = typeof notificationSettings.$inferInsert;

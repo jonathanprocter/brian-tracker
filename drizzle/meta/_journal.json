@@ -15,6 +15,13 @@
       "when": 1765786134077,
       "tag": "0001_warm_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1765789602713,
+      "tag": "0002_funny_skaar",
+      "breakpoints": true
     }
   ]
 }

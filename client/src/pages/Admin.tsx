@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { AlertCircle, TrendingDown, TrendingUp, Calendar, Activity } from "lucide-react";
+import { AlertCircle, TrendingDown, TrendingUp, Calendar, Activity, Download, Bell } from "lucide-react";
 import { useLocation } from "wouter";
 import { Line } from "react-chartjs-2";
 import { toast } from "sonner";
@@ -32,6 +32,68 @@ export default function Admin() {
     { userId: brianId! },
     { enabled: !!brianId }
   );
+
+  const { data: exportData, refetch: refetchExport, isFetching: isExporting } = trpc.admin.exportClientData.useQuery(
+    { userId: brianId! },
+    { enabled: false } // Only fetch on demand
+  );
+
+  const sendTestNotification = trpc.notifications.sendTestNotification.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success("Test notification sent!");
+      } else {
+        toast.error("Failed to send notification");
+      }
+    },
+    onError: () => {
+      toast.error("Failed to send notification");
+    }
+  });
+
+  const handleExportCSV = async () => {
+    const result = await refetchExport();
+    if (result.data) {
+      const data = result.data;
+      
+      // Create CSV content
+      const headers = ['Date', 'Week', 'Task', 'Anxiety Before', 'Anxiety During', 'Reduction', 'Used Klonopin', 'Win Note', 'XP Earned'];
+      const rows = data.entries.map(e => [
+        e.date,
+        e.week,
+        `"${e.task}"`,
+        e.anxietyBefore,
+        e.anxietyDuring,
+        e.anxietyReduction,
+        e.usedKlonopin,
+        `"${(e.winNote || '').replace(/"/g, '""')}"`,
+        e.xpEarned
+      ]);
+      
+      const csvContent = [
+        `# Brian's Progress Report`,
+        `# Generated: ${new Date().toLocaleDateString()}`,
+        `# Level: ${data.user.currentLevel} | XP: ${data.user.totalXp} | Streak: ${data.user.currentStreak}`,
+        `# Total Entries: ${data.totalEntries} | Achievements: ${data.achievementsUnlocked}`,
+        '',
+        headers.join(','),
+        ...rows.map(r => r.join(','))
+      ].join('\n');
+      
+      // Download file
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `brian-progress-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success('CSV exported successfully!');
+    }
+  };
 
   if (!isAuthenticated || user?.role !== 'admin') {
     toast.error("Admin access required");
@@ -143,8 +205,34 @@ export default function Admin() {
       {/* Header */}
       <div className="bg-card border-b border-border p-4 sticky top-0 z-10">
         <div className="container max-w-4xl">
-          <h1 className="text-xl font-bold">👨‍⚕️ 5786 Admin Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Monitoring Brian's Progress</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold">👨‍⚕️ 5786 Admin Dashboard</h1>
+              <p className="text-sm text-muted-foreground">Monitoring Brian's Progress</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => sendTestNotification.mutate()}
+                disabled={sendTestNotification.isPending}
+                className="h-10"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Test Notify
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleExportCSV}
+                disabled={isExporting}
+                className="h-10"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                {isExporting ? 'Exporting...' : 'Export CSV'}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 

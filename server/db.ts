@@ -8,9 +8,11 @@ import {
   achievements, 
   userAchievements, 
   loginActivity,
+  notificationSettings,
   InsertEntry,
   InsertUserAchievement,
-  InsertLoginActivity
+  InsertLoginActivity,
+  InsertNotificationSettings
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -271,4 +273,85 @@ export async function getLastLogin(userId: number) {
     .limit(1);
     
   return result.length > 0 ? result[0] : undefined;
+}
+
+// Notification settings queries
+export async function getNotificationSettings(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select()
+    .from(notificationSettings)
+    .where(eq(notificationSettings.userId, userId))
+    .limit(1);
+    
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function upsertNotificationSettings(userId: number, settings: { enabled: boolean; reminderTime: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await getNotificationSettings(userId);
+  
+  if (existing) {
+    await db.update(notificationSettings)
+      .set({ enabled: settings.enabled, reminderTime: settings.reminderTime })
+      .where(eq(notificationSettings.userId, userId));
+  } else {
+    await db.insert(notificationSettings).values({
+      userId,
+      enabled: settings.enabled,
+      reminderTime: settings.reminderTime,
+    });
+  }
+  
+  return await getNotificationSettings(userId);
+}
+
+export async function updateLastNotified(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(notificationSettings)
+    .set({ lastNotifiedAt: new Date() })
+    .where(eq(notificationSettings.userId, userId));
+}
+
+export async function getUsersNeedingNotification() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Get all users with enabled notifications
+  const settings = await db.select({
+    userId: notificationSettings.userId,
+    reminderTime: notificationSettings.reminderTime,
+    lastNotifiedAt: notificationSettings.lastNotifiedAt,
+  })
+  .from(notificationSettings)
+  .where(eq(notificationSettings.enabled, true));
+  
+  return settings;
+}
+
+// Export all entries for CSV
+export async function getAllUserEntries(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select({
+    id: entries.id,
+    completedAt: entries.completedAt,
+    anxietyBefore: entries.anxietyBefore,
+    anxietyDuring: entries.anxietyDuring,
+    usedKlonopin: entries.usedKlonopin,
+    winNote: entries.winNote,
+    xpEarned: entries.xpEarned,
+    taskName: tasks.taskName,
+    weekNumber: tasks.weekNumber,
+  })
+  .from(entries)
+  .leftJoin(tasks, eq(entries.taskId, tasks.id))
+  .where(eq(entries.userId, userId))
+  .orderBy(desc(entries.completedAt));
 }
