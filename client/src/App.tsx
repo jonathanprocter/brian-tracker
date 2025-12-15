@@ -10,6 +10,7 @@ import Stats from "./pages/Stats";
 import Achievements from "./pages/Achievements";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
+import About from "./pages/About";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/achievements" component={Achievements} />
       <Route path="/admin" component={Admin} />
       <Route path="/settings" component={Settings} />
+      <Route path="/about" component={About} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

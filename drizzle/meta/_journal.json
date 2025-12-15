@@ -29,6 +29,13 @@
       "when": 1765808885911,
       "tag": "0003_chemical_satana",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1765822071379,
+      "tag": "0004_lowly_stick",
+      "breakpoints": true
     }
   ]
 }

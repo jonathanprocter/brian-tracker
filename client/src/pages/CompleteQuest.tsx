@@ -288,6 +288,24 @@ export default function CompleteQuest() {
               </p>
             </div>
 
+            {/* Psychoeducation - Why This Helps */}
+            {currentTask?.psychoeducation && (
+              <details className="bg-primary/5 border border-primary/20 rounded-lg">
+                <summary className="p-4 cursor-pointer font-medium text-sm flex items-center gap-2">
+                  <span>📚</span> Why This Task Helps (tap to learn more)
+                </summary>
+                <div className="px-4 pb-4 text-sm text-muted-foreground space-y-3 prose prose-sm prose-invert max-w-none">
+                  {currentTask.psychoeducation.split('\n\n').map((paragraph, i) => (
+                    <p key={i} dangerouslySetInnerHTML={{ 
+                      __html: paragraph
+                        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\n•/g, '<br/>•')
+                    }} />
+                  ))}
+                </div>
+              </details>
+            )}
+
             {/* Anxiety Before */}
             <div className="space-y-3">
               <Label className="text-base font-semibold">Anxiety BEFORE task (0-10)</Label>

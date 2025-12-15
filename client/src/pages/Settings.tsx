@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Bell, Clock, LogOut } from "lucide-react";
+import { ArrowLeft, Bell, Clock, LogOut, BookOpen } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 
@@ -136,6 +136,27 @@ export default function Settings() {
             >
               {updateSettings.isPending ? "Saving..." : "Save Settings"}
             </Button>
+
+            {/* About This App */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  Learn More
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setLocation("/about")}
+                  className="w-full h-14"
+                  size="lg"
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  About This App & How It Works
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* Logout Button */}
             <Card className="mt-6">

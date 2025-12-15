@@ -37,6 +37,7 @@ export const tasks = mysqlTable("tasks", {
   taskName: varchar("taskName", { length: 255 }).notNull(),
   taskDescription: text("taskDescription").notNull(),
   questDescription: text("questDescription").notNull(),
+  psychoeducation: text("psychoeducation"), // Educational content about why this task helps
   goalDays: int("goalDays").default(3).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

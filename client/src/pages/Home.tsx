@@ -98,11 +98,14 @@ export default function Home() {
         <Card className="max-w-md w-full">
           <CardHeader>
             <CardTitle className="text-2xl text-center">Brian's Progress Tracker</CardTitle>
+            <p className="text-sm text-muted-foreground text-center mt-2">
+              A tool designed to help you gradually reclaim your outdoor life through small, manageable daily steps.
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <p className="text-center text-muted-foreground">
-                Enter your name or code to continue.
+                Enter your name to continue.
               </p>
               <Input
                 type="text"
