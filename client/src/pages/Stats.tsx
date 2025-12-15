@@ -270,7 +270,7 @@ export default function Stats() {
               <Button 
                 onClick={() => setLocation("/achievements")} 
                 variant="outline" 
-                className="w-full"
+                className="w-full h-14 text-base font-medium"
               >
                 View All Achievements
               </Button>

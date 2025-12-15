@@ -44,7 +44,7 @@ export default function Home() {
             <p className="text-center text-muted-foreground">
               Your epic quest to defeat Anxiety Boss and reclaim your outdoor life.
             </p>
-            <Button asChild className="w-full" size="lg">
+            <Button asChild className="w-full h-16 text-lg font-bold" size="lg">
               <a href={getLoginUrl()}>Login to Start Your Journey</a>
             </Button>
           </CardContent>
@@ -202,7 +202,7 @@ export default function Home() {
                     </p>
                   </div>
                 ) : (
-                  <Button asChild size="lg" className="w-full">
+                  <Button asChild size="lg" className="w-full h-16 text-lg font-bold">
                     <Link href="/complete-quest">Complete Today's Quest</Link>
                   </Button>
                 )}

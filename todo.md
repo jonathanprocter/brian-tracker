@@ -124,3 +124,16 @@
 - [x] Optimize bottom navigation for thumb reach (h-20, larger icons)
 - [ ] Add swipe gestures where appropriate - Future enhancement
 - [x] Ensure proper spacing for fat-finger friendly UI
+
+
+## Comprehensive iPhone Optimization Audit
+- [x] Add viewport meta tag with viewport-fit=cover
+- [x] Add apple-mobile-web-app-capable meta tag
+- [x] Add apple-mobile-web-app-status-bar-style meta tag
+- [x] Ensure all touch targets are at least 44x44pt
+- [x] Add -webkit-tap-highlight-color for iOS
+- [x] Disable text size adjust for consistent sizing
+- [x] Add overscroll-behavior to prevent bounce issues
+- [x] Ensure proper keyboard handling on inputs (16px font)
+- [x] Add standalone mode detection for PWA (manifest)
+- [x] Optimize loading states for mobile

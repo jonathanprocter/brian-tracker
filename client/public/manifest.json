@@ -3,6 +3,7 @@
   "short_name": "Brian's Quest",
   "description": "Gamified behavioral activation tracking app for defeating Anxiety Boss",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0F172A",
@@ -22,5 +23,7 @@
     }
   ],
   "categories": ["health", "lifestyle"],
-  "lang": "en-US"
+  "lang": "en-US",
+  "prefer_related_applications": false,
+  "display_override": ["standalone", "minimal-ui"]
 }

@@ -295,23 +295,23 @@ export default function CompleteQuest() {
 
             {/* Win Note */}
             <div className="space-y-3">
-              <Label htmlFor="win-note" className="text-base">💪 Today's Win (Optional)</Label>
+              <Label htmlFor="win-note" className="text-base font-semibold">💪 Today's Win (Optional)</Label>
               <Textarea
                 id="win-note"
                 placeholder="What went well? What are you proud of?"
                 value={winNote}
                 onChange={(e) => setWinNote(e.target.value)}
-                rows={3}
-                className="resize-none"
+                rows={4}
+                className="resize-none text-base min-h-[120px]"
               />
             </div>
 
-            {/* Submit Button */}
+            {/* Submit Button - Large for iPhone */}
             <Button 
               onClick={handleSubmit}
               disabled={anxietyBefore === null || anxietyDuring === null || createEntry.isPending}
               size="lg"
-              className="w-full"
+              className="w-full h-16 text-lg font-bold"
             >
               {createEntry.isPending ? (
                 <>
