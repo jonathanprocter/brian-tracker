@@ -61,8 +61,8 @@ export default function Home() {
   // XP progress
   const xpProgress = stats ? ((stats.totalXp % stats.xpForNextLevel) / stats.xpForNextLevel) * 100 : 0;
   
-  // Week calendar
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // Week calendar (Monday first)
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const today = new Date();
   const completedDates = new Set(
     weekEntries?.map(entry => new Date(entry.completedAt).toDateString()) || []
@@ -142,7 +142,10 @@ export default function Home() {
             <div className="grid grid-cols-7 gap-2">
               {weekDays.map((day, index) => {
                 const date = new Date(today);
-                date.setDate(today.getDate() - today.getDay() + index);
+                // Monday = 0, so adjust: getDay() returns 0 for Sunday, 1 for Monday, etc.
+                const dayOfWeek = today.getDay();
+                const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // If Sunday, go back 6 days to Monday
+                date.setDate(today.getDate() + mondayOffset + index);
                 const isCompleted = completedDates.has(date.toDateString());
                 const isToday = date.toDateString() === today.toDateString();
                 

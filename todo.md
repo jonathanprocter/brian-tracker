@@ -144,3 +144,5 @@
 - [x] Make copy more mature and age-appropriate
 - [x] Keep gaming theme but less dramatic
 - [x] Remove game controller emoji from headers
+
+- [x] Change first day of week from Sunday to Monday
