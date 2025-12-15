@@ -24,6 +24,48 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    
+    // Simple passcode login - Brian or 5786
+    passcodeLogin: publicProcedure
+      .input(z.object({ passcode: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const { passcode } = input;
+        const passcodeUpper = passcode.trim().toUpperCase();
+        
+        let role: 'client' | 'admin';
+        let openId: string;
+        let name: string;
+        
+        if (passcodeUpper === 'BRIAN') {
+          role = 'client';
+          openId = 'brian-client';
+          name = 'Brian';
+        } else if (passcode.trim() === '5786') {
+          role = 'admin';
+          openId = 'admin-5786';
+          name = '5786';
+        } else {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid passcode' });
+        }
+        
+        // Upsert user in database
+        await db.upsertUser({
+          openId,
+          name,
+          role,
+          lastSignedIn: new Date(),
+        });
+        
+        // Create session token
+        const { sdk } = await import("./_core/sdk");
+        const token = await sdk.createSessionToken(openId, { name });
+        
+        // Set session cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
+        
+        return { success: true, role, name };
+      }),
   }),
 
   tasks: router({

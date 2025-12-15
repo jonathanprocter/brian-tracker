@@ -161,3 +161,15 @@
 - [x] Create notification settings UI for Brian
 - [x] Add CSV export button to admin dashboard
 - [x] Implement CSV generation for all client data
+
+
+## Display Name Updates
+- [x] Ensure Brian sees "Brian" as his display name (header shows "Brian's Progress")
+- [x] Ensure admin sees "5786" as their identifier (header shows "5786 Admin Dashboard")
+
+
+## Simple Passcode Login
+- [x] Create passcode login endpoint (Brian = client, 5786 = admin)
+- [x] Update login UI to show simple passcode input
+- [x] Remove OAuth login requirement
+- [x] Auto-create Brian and admin users on first login

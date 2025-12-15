@@ -1,14 +1,19 @@
+import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import { Flame, Trophy, TrendingUp, Calendar, Settings } from "lucide-react";
-import { Link } from "wouter";
-import { getLoginUrl } from "@/const";
+import { Link, useLocation } from "wouter";
+import { toast } from "sonner";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
+  const [passcode, setPasscode] = useState("");
+  const [, setLocation] = useLocation();
+  
   const { data: stats, isLoading: statsLoading } = trpc.stats.getOverview.useQuery(undefined, {
     enabled: isAuthenticated,
   });
@@ -21,13 +26,34 @@ export default function Home() {
   const { data: todayEntry } = trpc.entries.getTodayEntry.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  
+  const loginMutation = trpc.auth.passcodeLogin.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Welcome, ${data.name}!`);
+      if (data.role === 'admin') {
+        setLocation('/admin');
+      } else {
+        window.location.reload();
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "Invalid passcode");
+    },
+  });
 
-  if (loading || statsLoading) {
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passcode.trim()) {
+      loginMutation.mutate({ passcode: passcode.trim() });
+    }
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your quest log...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -40,13 +66,29 @@ export default function Home() {
           <CardHeader>
             <CardTitle className="text-2xl text-center">Brian's Progress Tracker</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-center text-muted-foreground">
-              Track your daily progress and build momentum.
-            </p>
-            <Button asChild className="w-full h-16 text-lg font-bold" size="lg">
-              <a href={getLoginUrl()}>Login to Start Your Journey</a>
-            </Button>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <p className="text-center text-muted-foreground">
+                Enter your name or code to continue.
+              </p>
+              <Input
+                type="text"
+                placeholder="Enter name or code"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                className="h-14 text-lg text-center"
+                autoFocus
+                autoComplete="off"
+              />
+              <Button 
+                type="submit" 
+                className="w-full h-16 text-lg font-bold" 
+                size="lg"
+                disabled={!passcode.trim() || loginMutation.isPending}
+              >
+                {loginMutation.isPending ? "Logging in..." : "Continue"}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
