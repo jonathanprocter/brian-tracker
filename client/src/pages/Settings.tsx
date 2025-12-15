@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Bell, Clock } from "lucide-react";
+import { ArrowLeft, Bell, Clock, LogOut } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 
 export default function Settings() {
   const [, setLocation] = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   
   const [enabled, setEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState("09:00");
@@ -136,6 +136,30 @@ export default function Settings() {
             >
               {updateSettings.isPending ? "Saving..." : "Save Settings"}
             </Button>
+
+            {/* Logout Button */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LogOut className="w-5 h-5" />
+                  Account
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    logout();
+                    setLocation("/");
+                  }}
+                  className="w-full h-14 text-destructive hover:text-destructive"
+                  size="lg"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Log Out
+                </Button>
+              </CardContent>
+            </Card>
           </>
         )}
       </div>

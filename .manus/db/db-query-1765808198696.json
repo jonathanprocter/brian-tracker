@@ -1,0 +1,27 @@
+{
+  "query": "SELECT * FROM users WHERE openId = 'admin-5786';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2PprtSQ4Zk9Y5ny.86a592924615 --database Pxiy7SwGqKU897aqB9quEM --execute SELECT * FROM users WHERE openId = 'admin-5786';",
+  "rows": [
+    {
+      "id": "150003",
+      "openId": "admin-5786",
+      "name": "5786",
+      "email": "NULL",
+      "loginMethod": "NULL",
+      "role": "admin",
+      "createdAt": "2025-12-15 09:26:07",
+      "updatedAt": "2025-12-15 14:15:11",
+      "lastSignedIn": "2025-12-15 14:15:11",
+      "currentWeek": "1",
+      "totalXp": "0",
+      "currentLevel": "1",
+      "currentStreak": "0",
+      "longestStreak": "0",
+      "lastCompletionDate": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tloginMethod\trole\tcreatedAt\tupdatedAt\tlastSignedIn\tcurrentWeek\ttotalXp\tcurrentLevel\tcurrentStreak\tlongestStreak\tlastCompletionDate\n150003\tadmin-5786\t5786\tNULL\tNULL\tadmin\t2025-12-15 09:26:07\t2025-12-15 14:15:11\t2025-12-15 14:15:11\t1\t0\t1\t0\t0\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 92
+}

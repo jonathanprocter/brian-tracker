@@ -190,3 +190,8 @@
 - [x] Add celebration sound effect with confetti animation
 
 - [x] Add haptic feedback on task completion using Vibration API
+
+
+## Bug Fixes
+- [x] Fix admin access issue when entering 5786 passcode (verified role is 'admin' in DB)
+- [x] Add logout button to Settings page for switching accounts

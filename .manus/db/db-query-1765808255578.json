@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, openId, name, role FROM users;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2PprtSQ4Zk9Y5ny.86a592924615 --database Pxiy7SwGqKU897aqB9quEM --execute SELECT id, openId, name, role FROM users;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "BGgTDvwGGEYzCU8c56V3VG",
+      "name": "Jonathan Procter",
+      "role": "admin"
+    },
+    {
+      "id": "150001",
+      "openId": "brian-client",
+      "name": "Brian",
+      "role": "client"
+    },
+    {
+      "id": "150003",
+      "openId": "admin-5786",
+      "name": "5786",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\trole\n1\tBGgTDvwGGEYzCU8c56V3VG\tJonathan Procter\tadmin\n150001\tbrian-client\tBrian\tclient\n150003\tadmin-5786\t5786\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}
