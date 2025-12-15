@@ -187,23 +187,23 @@ export default function Stats() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5" />
-              Anxiety Boss Battle
+              Anxiety Progress
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-center">
-              <div className="text-6xl mb-3">👾</div>
-              <p className="text-sm text-muted-foreground mb-2">Total Damage Dealt</p>
-              <p className="text-4xl font-bold text-destructive">{stats?.totalDamageDealt}</p>
+              <div className="text-6xl mb-3">📉</div>
+              <p className="text-sm text-muted-foreground mb-2">Total Anxiety Reduction</p>
+              <p className="text-4xl font-bold text-success">{stats?.totalDamageDealt}</p>
             </div>
 
             <div className="bg-card/50 rounded-lg p-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Average Damage per Quest</span>
+                <span className="text-muted-foreground">Average Reduction per Task</span>
                 <span className="font-bold">{avgReduction.toFixed(1)} points</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total Quests Completed</span>
+                <span className="text-muted-foreground">Total Tasks Completed</span>
                 <span className="font-bold">{stats?.totalTasks}</span>
               </div>
             </div>
@@ -328,7 +328,7 @@ export default function Stats() {
           <div className="grid grid-cols-3 gap-3 p-4 pb-6">
             <Button variant="ghost" onClick={() => setLocation("/")} className="flex-col h-20">
               <Calendar className="w-7 h-7 mb-1" />
-              <span className="text-sm font-medium">Quest Log</span>
+              <span className="text-sm font-medium">Progress</span>
             </Button>
             <Button variant="default" className="flex-col h-20">
               <TrendingUp className="w-7 h-7 mb-1" />

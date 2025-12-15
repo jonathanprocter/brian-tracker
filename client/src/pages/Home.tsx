@@ -38,11 +38,11 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">🎮 Brian's Progress Tracker</CardTitle>
+            <CardTitle className="text-2xl text-center">Brian's Progress Tracker</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-center text-muted-foreground">
-              Your epic quest to defeat Anxiety Boss and reclaim your outdoor life.
+              Track your daily progress and build momentum.
             </p>
             <Button asChild className="w-full h-16 text-lg font-bold" size="lg">
               <a href={getLoginUrl()}>Login to Start Your Journey</a>
@@ -73,8 +73,8 @@ export default function Home() {
       {/* Header */}
       <div className="bg-card border-b border-border p-4">
         <div className="container max-w-2xl">
-          <h1 className="text-2xl font-bold">🎮 Brian's Quest Log</h1>
-          <p className="text-sm text-muted-foreground">Your path to defeating Anxiety Boss</p>
+          <h1 className="text-2xl font-bold">Brian's Progress</h1>
+          <p className="text-sm text-muted-foreground">Daily check-in and progress tracking</p>
         </div>
       </div>
 
@@ -179,7 +179,7 @@ export default function Home() {
         {/* Today's Quest */}
         <Card>
           <CardHeader>
-            <CardTitle>🎯 Today's Quest</CardTitle>
+            <CardTitle>🎯 Today's Task</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {currentTask && (
@@ -196,14 +196,14 @@ export default function Home() {
 
                 {todayEntry ? (
                   <div className="bg-success/10 border border-success/20 rounded-lg p-4 text-center">
-                    <p className="text-success font-bold mb-1">✓ Quest Complete!</p>
+                    <p className="text-success font-bold mb-1">✓ Task Complete!</p>
                     <p className="text-sm text-muted-foreground">
                       You earned {todayEntry.xpEarned} XP today. Come back tomorrow!
                     </p>
                   </div>
                 ) : (
                   <Button asChild size="lg" className="w-full h-16 text-lg font-bold">
-                    <Link href="/complete-quest">Complete Today's Quest</Link>
+                    <Link href="/complete-quest">Complete Today's Task</Link>
                   </Button>
                 )}
               </>
@@ -217,15 +217,15 @@ export default function Home() {
             <CardContent className="pt-6 text-center">
               <TrendingUp className="w-8 h-8 mx-auto mb-2 text-primary" />
               <p className="text-2xl font-bold">{stats?.totalTasks}</p>
-              <p className="text-xs text-muted-foreground">Total Quests</p>
+              <p className="text-xs text-muted-foreground">Tasks Done</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardContent className="pt-6 text-center">
-              <div className="text-2xl mb-2">💥</div>
+              <div className="text-2xl mb-2">📉</div>
               <p className="text-2xl font-bold">{stats?.totalDamageDealt}</p>
-              <p className="text-xs text-muted-foreground">Boss Damage</p>
+              <p className="text-xs text-muted-foreground">Anxiety Reduced</p>
             </CardContent>
           </Card>
         </div>
@@ -238,7 +238,7 @@ export default function Home() {
             <Button variant="ghost" asChild className="flex-col h-20 text-primary">
               <Link href="/">
                 <Calendar className="w-7 h-7 mb-1" />
-                <span className="text-sm font-medium">Quest Log</span>
+                <span className="text-sm font-medium">Progress</span>
               </Link>
             </Button>
             <Button variant="ghost" asChild className="flex-col h-20">

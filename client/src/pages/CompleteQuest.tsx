@@ -136,24 +136,24 @@ export default function CompleteQuest() {
 
             {result.anxietyReduction > 0 && (
               <div className="bg-card/50 rounded-lg p-4">
-                <p className="font-bold mb-2">💥 Damage to Anxiety Boss:</p>
+                <p className="font-bold mb-2">📉 Anxiety Reduction:</p>
                 <p className="text-center">
-                  <span className="text-xl">You dealt </span>
-                  <span className="text-2xl font-bold text-destructive">{result.anxietyReduction}</span>
-                  <span className="text-xl"> damage!</span>
+                  <span className="text-xl">You reduced anxiety by </span>
+                  <span className="text-2xl font-bold text-success">{result.anxietyReduction}</span>
+                  <span className="text-xl"> points!</span>
                 </p>
                 <p className="text-sm text-center text-muted-foreground mt-1">
-                  (Anxiety: {anxietyBefore} → {anxietyDuring})
+                  (Before: {anxietyBefore} → During: {anxietyDuring})
                 </p>
               </div>
             )}
 
             <div className="space-y-2">
               <p className="text-center text-muted-foreground italic">
-                "Quest complete! Your courage is leveling up."
+                "Great work! Every step forward counts."
               </p>
-              <Button onClick={() => setLocation("/")} className="w-full" size="lg">
-                Back to Quest Log
+              <Button onClick={() => setLocation("/")} className="w-full h-14" size="lg">
+                Back to Progress
               </Button>
             </div>
           </CardContent>
@@ -192,7 +192,7 @@ export default function CompleteQuest() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-xl font-bold">Complete Quest</h1>
+            <h1 className="text-xl font-bold">Complete Task</h1>
             <p className="text-sm text-muted-foreground">{currentTask?.taskName}</p>
           </div>
         </div>
@@ -204,13 +204,13 @@ export default function CompleteQuest() {
             <CardTitle>🎯 {currentTask?.taskName}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Quest Description */}
+            {/* Task Description */}
             <div className="bg-card/50 rounded-lg p-4">
               <p className="text-sm italic text-muted-foreground mb-2">
                 "{currentTask?.questDescription}"
               </p>
               <p className="text-sm">
-                <span className="font-medium">Mission:</span> {currentTask?.taskDescription}
+                <span className="font-medium">Goal:</span> {currentTask?.taskDescription}
               </p>
             </div>
 

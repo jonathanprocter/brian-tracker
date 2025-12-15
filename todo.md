@@ -137,3 +137,10 @@
 - [x] Ensure proper keyboard handling on inputs (16px font)
 - [x] Add standalone mode detection for PWA (manifest)
 - [x] Optimize loading states for mobile
+
+
+### Language/Copy Updates
+- [x] Tone down "epic quest" and "Anxiety Boss" language
+- [x] Make copy more mature and age-appropriate
+- [x] Keep gaming theme but less dramatic
+- [x] Remove game controller emoji from headers

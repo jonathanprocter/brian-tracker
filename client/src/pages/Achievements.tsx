@@ -136,7 +136,7 @@ export default function Achievements() {
               <p className="text-lg font-medium mb-2">Keep Going!</p>
               <p className="text-sm text-muted-foreground">
                 You have {allAchievements.length - userAchievements.length} more achievements to unlock.
-                Complete daily quests to earn them all!
+                Complete daily tasks to earn them.
               </p>
             </CardContent>
           </Card>
@@ -148,7 +148,7 @@ export default function Achievements() {
               <div className="text-6xl mb-3">🎉</div>
               <p className="text-2xl font-bold text-success mb-2">All Achievements Unlocked!</p>
               <p className="text-sm text-muted-foreground">
-                You've completed every achievement! You're a true champion!
+                You've completed every achievement. Great work!
               </p>
             </CardContent>
           </Card>
@@ -161,7 +161,7 @@ export default function Achievements() {
           <div className="grid grid-cols-3 gap-3 p-4 pb-6">
             <Button variant="ghost" onClick={() => setLocation("/")} className="flex-col h-20">
               <Calendar className="w-7 h-7 mb-1" />
-              <span className="text-sm font-medium">Quest Log</span>
+              <span className="text-sm font-medium">Progress</span>
             </Button>
             <Button variant="ghost" onClick={() => setLocation("/stats")} className="flex-col h-20">
               <TrendingUp className="w-7 h-7 mb-1" />
