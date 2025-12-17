@@ -58,7 +58,9 @@ export function useActivityTracker() {
         sessionDuration: duration,
       });
       
-      navigator.sendBeacon('/api/trpc/activity.logEvent', data);
+      // Create Blob with correct content-type for tRPC
+      const blob = new Blob([data], { type: 'application/json' });
+      navigator.sendBeacon('/api/trpc/activity.logEvent', blob);
     };
 
     window.addEventListener('beforeunload', handleUnload);

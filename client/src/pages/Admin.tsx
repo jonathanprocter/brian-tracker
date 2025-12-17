@@ -15,8 +15,9 @@ export default function Admin() {
     enabled: isAuthenticated && user?.role === 'admin',
   });
 
-  // For now, we'll focus on Brian (first client)
-  const brianId = clients?.[0]?.id;
+  // Get first client (Brian)
+  const clientUser = clients?.[0];
+  const brianId = clientUser?.id;
   
   const { data: activity, isLoading } = trpc.admin.getUserActivity.useQuery(
     { userId: brianId! },
@@ -24,7 +25,7 @@ export default function Admin() {
   );
 
   const { data: recentEntries } = trpc.entries.getRecent.useQuery(
-    { limit: 20 },
+    { limit: 20, userId: brianId! },
     { enabled: !!brianId }
   );
 
@@ -71,22 +72,33 @@ export default function Admin() {
     if (result.data) {
       const data = result.data;
       
+      // Sanitize CSV values to prevent injection attacks
+      const sanitizeCSV = (value: string) => {
+        // Remove leading characters that could trigger formula execution
+        const dangerous = ['=', '+', '-', '@', '\t', '\r'];
+        let sanitized = String(value || '');
+        if (dangerous.some(char => sanitized.startsWith(char))) {
+          sanitized = "'" + sanitized; // Prefix with single quote to escape
+        }
+        return `"${sanitized.replace(/"/g, '""')}"`;
+      };
+      
       // Create CSV content
       const headers = ['Date', 'Week', 'Task', 'Anxiety Before', 'Anxiety During', 'Reduction', 'Used Klonopin', 'Win Note', 'XP Earned'];
       const rows = data.entries.map(e => [
         e.date,
         e.week,
-        `"${e.task}"`,
+        sanitizeCSV(e.task),
         e.anxietyBefore,
         e.anxietyDuring,
         e.anxietyReduction,
         e.usedKlonopin,
-        `"${(e.winNote || '').replace(/"/g, '""')}"`,
+        sanitizeCSV(e.winNote || ''),
         e.xpEarned
       ]);
       
       const csvContent = [
-        `# Brian's Progress Report`,
+        `# ${data.user.name}'s Progress Report`,
         `# Generated: ${new Date().toLocaleDateString()}`,
         `# Level: ${data.user.currentLevel} | XP: ${data.user.totalXp} | Streak: ${data.user.currentStreak}`,
         `# Total Entries: ${data.totalEntries} | Achievements: ${data.achievementsUnlocked}`,
@@ -223,7 +235,7 @@ export default function Admin() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold">👨‍⚕️ 5786 Admin Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Monitoring Brian's Progress</p>
+              <p className="text-sm text-muted-foreground">Monitoring {clientUser?.name}'s Progress</p>
             </div>
             <div className="flex gap-2">
               <Button
@@ -581,7 +593,7 @@ export default function Admin() {
               </div>
             ) : (
               <p className="text-center text-muted-foreground py-4">
-                No activity logged yet. Activity will appear as Brian uses the app.
+                No activity logged yet. Activity will appear as {clientUser?.name || 'the client'} uses the app.
               </p>
             )}
           </CardContent>

@@ -57,7 +57,7 @@ export default function Home() {
         pagePath: '/',
       });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, logActivity]);
   
   const loginMutation = trpc.auth.passcodeLogin.useMutation({
     onSuccess: (data) => {
@@ -97,7 +97,7 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Brian's Progress Tracker</CardTitle>
+            <CardTitle className="text-2xl text-center">Progress Tracker</CardTitle>
             <p className="text-sm text-muted-foreground text-center mt-2">
               A tool designed to help you gradually reclaim your outdoor life through small, manageable daily steps.
             </p>
@@ -153,7 +153,7 @@ export default function Home() {
         <div className="container max-w-2xl">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Brian's Progress</h1>
+              <h1 className="text-2xl font-bold">{user?.name}'s Progress</h1>
               <p className="text-sm text-muted-foreground">
                 {typeof aiGreeting?.greeting === 'string' ? aiGreeting.greeting : "Daily check-in and progress tracking"}
               </p>

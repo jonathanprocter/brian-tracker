@@ -1,0 +1,1 @@
+ALTER TABLE `entries` ADD CONSTRAINT `user_date_idx` UNIQUE(`userId`,`DATE(`completedAt`)`);

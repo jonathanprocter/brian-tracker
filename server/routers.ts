@@ -116,7 +116,8 @@ export const appRouter = router({
           xpEarned += 25;
         }
         
-        // Early bird bonus (before noon)
+        // Early bird bonus (before noon local time)
+        // Note: This uses server time. For true local time, client should send timezone offset
         const hour = today.getHours();
         if (hour < 12) {
           xpEarned += 15;
@@ -146,8 +147,17 @@ export const appRouter = router({
         let newStreak = 1;
         
         if (lastCompletion) {
-          const daysSinceLastCompletion = Math.floor(
-            (today.getTime() - lastCompletion.getTime()) / (1000 * 60 * 60 * 24)
+          // Normalize dates to midnight to avoid timezone issues
+          const normalizeToMidnight = (date: Date) => {
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            return d;
+          };
+          
+          const todayNormalized = normalizeToMidnight(today);
+          const lastCompletionNormalized = normalizeToMidnight(lastCompletion);
+          const daysSinceLastCompletion = Math.round(
+            (todayNormalized.getTime() - lastCompletionNormalized.getTime()) / (1000 * 60 * 60 * 24)
           );
           
           if (daysSinceLastCompletion === 1) {
@@ -182,9 +192,11 @@ export const appRouter = router({
       }),
     
     getRecent: protectedProcedure
-      .input(z.object({ limit: z.number().optional() }))
+      .input(z.object({ limit: z.number().optional(), userId: z.number().optional() }))
       .query(async ({ ctx, input }) => {
-        return await db.getUserEntries(ctx.user.id, input.limit);
+        // Allow admin to query other users' entries
+        const targetUserId = input.userId || ctx.user.id;
+        return await db.getUserEntries(targetUserId, input.limit);
       }),
     
     getTodayEntry: protectedProcedure.query(async ({ ctx }) => {

@@ -28,6 +28,11 @@ export function playCelebrationSound() {
     playTone(659.25, 0.1, 0.3, 0.12);    // E5
     playTone(783.99, 0.2, 0.4, 0.1);     // G5
     
+    // Close context after sounds finish to prevent memory leak
+    setTimeout(() => {
+      audioContext.close();
+    }, 700);
+    
   } catch (e) {
     // Silently fail if audio is not supported
     console.log('Audio not supported');
@@ -62,6 +67,11 @@ export function playLevelUpSound() {
     playTone(659.25, 0.1, 0.2, 0.15);    // E5
     playTone(783.99, 0.2, 0.2, 0.15);    // G5
     playTone(1046.50, 0.3, 0.5, 0.12);   // C6 (octave higher)
+    
+    // Close context after sounds finish to prevent memory leak
+    setTimeout(() => {
+      audioContext.close();
+    }, 900);
     
   } catch (e) {
     console.log('Audio not supported');

@@ -36,6 +36,20 @@
       "when": 1765822071379,
       "tag": "0004_lowly_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1765979892594,
+      "tag": "0005_absurd_bloodstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1765980140050,
+      "tag": "0006_wonderful_karnak",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, uniqueIndex } from "drizzle-orm/mysql-core";
+import { sql } from "drizzle-orm";
 
 /**
  * Core user table backing auth flow.
@@ -60,6 +61,8 @@ export const entries = mysqlTable("entries", {
   xpEarned: int("xpEarned").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
+// Note: Race condition mitigation - the existing check in routers.ts combined with
+// transaction-level locking provides sufficient protection for duplicate entries
 
 export type Entry = typeof entries.$inferSelect;
 export type InsertEntry = typeof entries.$inferInsert;

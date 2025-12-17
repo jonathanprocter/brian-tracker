@@ -132,13 +132,9 @@ export async function getUserEntries(userId: number, limit?: number) {
   const db = await getDb();
   if (!db) return [];
   
-  let query = db.select().from(entries).where(eq(entries.userId, userId)).orderBy(desc(entries.completedAt));
+  const baseQuery = db.select().from(entries).where(eq(entries.userId, userId)).orderBy(desc(entries.completedAt));
   
-  if (limit) {
-    query = query.limit(limit) as any;
-  }
-  
-  return await query;
+  return limit ? await baseQuery.limit(limit) : await baseQuery;
 }
 
 export async function getEntriesForWeek(userId: number, weekStart: Date, weekEnd: Date) {

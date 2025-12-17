@@ -131,8 +131,13 @@ export default function Stats() {
 
   // Calculate trend (comparing first half vs second half)
   const halfPoint = Math.floor(anxietyData.length / 2);
-  const firstHalfAvg = anxietyData.slice(0, halfPoint).reduce((sum, e) => sum + e.anxietyBefore, 0) / halfPoint || 0;
-  const secondHalfAvg = anxietyData.slice(halfPoint).reduce((sum, e) => sum + e.anxietyBefore, 0) / (anxietyData.length - halfPoint) || 0;
+  const firstHalfAvg = halfPoint > 0 
+    ? anxietyData.slice(0, halfPoint).reduce((sum, e) => sum + e.anxietyBefore, 0) / halfPoint 
+    : 0;
+  const secondHalfLength = anxietyData.length - halfPoint;
+  const secondHalfAvg = secondHalfLength > 0
+    ? anxietyData.slice(halfPoint).reduce((sum, e) => sum + e.anxietyBefore, 0) / secondHalfLength
+    : 0;
   const trend = firstHalfAvg - secondHalfAvg;
 
   return (

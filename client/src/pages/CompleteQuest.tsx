@@ -44,7 +44,7 @@ export default function CompleteQuest() {
         pagePath: '/complete',
       });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, logActivity]);
   
   const createEntry = trpc.entries.create.useMutation({
     onSuccess: (data) => {
