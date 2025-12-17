@@ -207,7 +207,8 @@ export const appRouter = router({
     getWeekEntries: protectedProcedure.query(async ({ ctx }) => {
       const today = new Date();
       const weekStart = new Date(today);
-      weekStart.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+      const daysSinceMonday = (today.getDay() + 6) % 7; // 0 when Monday
+      weekStart.setDate(today.getDate() - daysSinceMonday); // Start of week (Monday)
       weekStart.setHours(0, 0, 0, 0);
       
       const weekEnd = new Date(weekStart);
@@ -415,45 +416,60 @@ export const appRouter = router({
         currentStreak: z.number(),
         taskName: z.string(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         const { invokeLLM } = await import("./_core/llm");
+        const userName = ctx.user?.name?.trim() || "Brian";
         
         const anxietyReduction = input.anxietyBefore - input.anxietyDuring;
         const context = `
-Brian just completed his daily behavioral activation task.
+${userName} just completed their daily behavioral activation task.
 - Task: ${input.taskName}
 - Anxiety before: ${input.anxietyBefore}/10
 - Anxiety during: ${input.anxietyDuring}/10
 - Anxiety reduction: ${anxietyReduction} points
 - Used Klonopin: ${input.usedKlonopin ? 'Yes' : 'No'}
 - Current streak: ${input.currentStreak} days
-${input.winNote ? `- Brian's win note: "${input.winNote}"` : ''}
+${input.winNote ? `- ${userName}'s win note: "${input.winNote}"` : ''}
 `;
 
-        const response = await invokeLLM({
-          messages: [
-            {
-              role: "system",
-              content: `You are a supportive, warm coach helping Brian with behavioral activation for anxiety. 
+        try {
+          const response = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content: `You are a supportive, warm coach helping ${userName} with behavioral activation for anxiety. 
 Keep responses brief (2-3 sentences max), genuine, and encouraging without being over-the-top.
 Focus on specific observations from his data. Be mature and calm, not childish or overly enthusiastic.
 Never use excessive exclamation marks or emojis. Sound like a supportive friend, not a cheerleader.`
-            },
-            {
-              role: "user",
-              content: `Generate a brief, personalized encouragement message for Brian based on this completion:\n${context}`
-            }
-          ],
-        });
+              },
+              {
+                role: "user",
+                content: `Generate a brief, personalized encouragement message for ${userName} based on this completion:\n${context}`
+              }
+            ],
+          });
 
-        return {
-          message: response.choices[0]?.message?.content || "Great work today. Every step forward counts."
-        };
+          return {
+            message: response.choices[0]?.message?.content || "Great work today. Every step forward counts."
+          };
+        } catch (error) {
+          console.error("[AI] Failed to generate completion message:", error);
+          const baseMessage = anxietyReduction > 0
+            ? `Nice work sticking with ${input.taskName} and bringing anxiety down ${anxietyReduction} points.`
+            : `You showed up for ${input.taskName} even while uncomfortable—that consistency matters.`;
+          return {
+            message: input.currentStreak > 1
+              ? `${baseMessage} Streak: ${input.currentStreak} days. Keep that rhythm going.`
+              : baseMessage
+          };
+        }
       }),
 
     // Generate weekly insights based on patterns
     getWeeklyInsights: protectedProcedure.query(async ({ ctx }) => {
       const { invokeLLM } = await import("./_core/llm");
+      const user = await db.getUserById(ctx.user.id);
+      const userName = user?.name?.trim() || "Brian";
       
       const entries = await db.getUserEntries(ctx.user.id, 14); // Last 2 weeks
       
@@ -471,40 +487,55 @@ Never use excessive exclamation marks or emojis. Sound like a supportive friend,
       const recentWins = entries.slice(0, 5).filter(e => e.winNote).map(e => e.winNote);
 
       const context = `
-Brian's recent progress (last ${entries.length} entries):
+${userName}'s recent progress (last ${entries.length} entries):
 - Average anxiety before tasks: ${avgAnxietyBefore.toFixed(1)}/10
 - Average anxiety during tasks: ${avgAnxietyDuring.toFixed(1)}/10
 - Average anxiety reduction: ${avgReduction.toFixed(1)} points
 - Klonopin usage: ${klonopinUsage} out of ${entries.length} tasks
-- Recent wins Brian noted: ${recentWins.length > 0 ? recentWins.join('; ') : 'None noted'}
+- Recent wins ${userName} noted: ${recentWins.length > 0 ? recentWins.join('; ') : 'None noted'}
 `;
 
-      const response = await invokeLLM({
-        messages: [
-          {
-            role: "system",
-            content: `You are a supportive coach analyzing Brian's behavioral activation progress.
+      try {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a supportive coach analyzing ${userName}'s behavioral activation progress.
 Provide a brief insight (2-3 sentences) about patterns you notice.
 Be specific, warm, and constructive. Focus on progress and gentle suggestions.
 Don't be preachy or use clinical language. Sound like a supportive friend.`
-          },
-          {
-            role: "user",
-            content: `Generate a brief insight for Brian based on his recent data:\n${context}`
-          }
-        ],
-      });
+            },
+            {
+              role: "user",
+              content: `Generate a brief insight for ${userName} based on recent data:\n${context}`
+            }
+          ],
+        });
 
-      return {
-        insight: response.choices[0]?.message?.content || "You're making steady progress. Keep it up.",
-        hasEnoughData: true,
-        stats: {
-          avgAnxietyBefore: avgAnxietyBefore.toFixed(1),
-          avgAnxietyDuring: avgAnxietyDuring.toFixed(1),
-          avgReduction: avgReduction.toFixed(1),
-          entriesCount: entries.length
-        }
-      };
+        return {
+          insight: response.choices[0]?.message?.content || "You're making steady progress. Keep it up.",
+          hasEnoughData: true,
+          stats: {
+            avgAnxietyBefore: avgAnxietyBefore.toFixed(1),
+            avgAnxietyDuring: avgAnxietyDuring.toFixed(1),
+            avgReduction: avgReduction.toFixed(1),
+            entriesCount: entries.length
+          }
+        };
+      } catch (error) {
+        console.error("[AI] Failed to generate weekly insights:", error);
+        const direction = avgReduction >= 0 ? "reduction" : "change";
+        return {
+          insight: `Here's the snapshot: average anxiety before tasks is ${avgAnxietyBefore.toFixed(1)}/10 with an average ${direction} of ${avgReduction.toFixed(1)} points during tasks. Keep an eye on how you feel over the next few days and adjust the pace if needed.`,
+          hasEnoughData: true,
+          stats: {
+            avgAnxietyBefore: avgAnxietyBefore.toFixed(1),
+            avgAnxietyDuring: avgAnxietyDuring.toFixed(1),
+            avgReduction: avgReduction.toFixed(1),
+            entriesCount: entries.length
+          }
+        };
+      }
     }),
 
     // Dynamic greeting and motivation for home screen
@@ -513,6 +544,7 @@ Don't be preachy or use clinical language. Sound like a supportive friend.`
       
       const user = await db.getUserById(ctx.user.id);
       if (!user) throw new TRPCError({ code: 'NOT_FOUND' });
+      const userName = user.name?.trim() || "Brian";
       
       const entries = await db.getUserEntries(ctx.user.id, 7);
       const todayEntry = await db.getEntryForDate(ctx.user.id, new Date());
@@ -524,7 +556,7 @@ Don't be preachy or use clinical language. Sound like a supportive friend.`
       
       const context = `
 Time: ${timeOfDay}
-User: Brian
+User: ${userName}
 Current streak: ${user.currentStreak} days
 Longest streak: ${user.longestStreak} days
 Current level: ${user.currentLevel}
@@ -534,29 +566,42 @@ Already completed today: ${todayEntry ? 'Yes' : 'No'}
 Streak at risk: ${user.currentStreak > 0 && !todayEntry ? 'Yes' : 'No'}
 `;
 
-      const response = await invokeLLM({
-        messages: [
-          {
-            role: "system",
-            content: `You are a supportive, warm companion helping Brian with his daily behavioral activation.
+      try {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a supportive, warm companion helping ${userName} with daily behavioral activation.
 Generate a brief, personalized greeting (1-2 sentences) based on the context.
 Be genuine and specific. If his streak is at risk, gently encourage without pressure.
 If he already completed today, acknowledge it warmly.
 Match the time of day in your greeting. Never use excessive punctuation or emojis.
 Sound like a calm, supportive friend - not a cheerleader or therapist.`
-          },
-          {
-            role: "user",
-            content: `Generate a personalized greeting for Brian:\n${context}`
-          }
-        ],
-      });
+            },
+            {
+              role: "user",
+              content: `Generate a personalized greeting for ${userName}:\n${context}`
+            }
+          ],
+        });
 
-      return {
-        greeting: response.choices[0]?.message?.content || `Good ${timeOfDay}, Brian.`,
-        streakAtRisk: user.currentStreak > 0 && !todayEntry,
-        completedToday: !!todayEntry,
-      };
+        return {
+          greeting: response.choices[0]?.message?.content || `Good ${timeOfDay}, ${userName}.`,
+          streakAtRisk: user.currentStreak > 0 && !todayEntry,
+          completedToday: !!todayEntry,
+        };
+      } catch (error) {
+        console.error("[AI] Failed to generate dynamic greeting:", error);
+        const baseGreeting = `Good ${timeOfDay}, ${userName}.`;
+        const streakReminder = user.currentStreak > 0 && !todayEntry
+          ? " You're on a streak—one small task today keeps it going."
+          : "";
+        return {
+          greeting: baseGreeting + streakReminder,
+          streakAtRisk: user.currentStreak > 0 && !todayEntry,
+          completedToday: !!todayEntry,
+        };
+      }
     }),
 
     // Get tip of the day based on recent patterns
@@ -565,6 +610,7 @@ Sound like a calm, supportive friend - not a cheerleader or therapist.`
       
       const entries = await db.getUserEntries(ctx.user.id, 10);
       const user = await db.getUserById(ctx.user.id);
+      const userName = user?.name?.trim() || "Brian";
       
       if (entries.length < 2) {
         return {
@@ -575,12 +621,13 @@ Sound like a calm, supportive friend - not a cheerleader or therapist.`
 
       const avgAnxietyBefore = entries.reduce((sum, e) => sum + e.anxietyBefore, 0) / entries.length;
       const avgAnxietyDuring = entries.reduce((sum, e) => sum + e.anxietyDuring, 0) / entries.length;
+      const avgReduction = avgAnxietyBefore - avgAnxietyDuring;
       const klonopinRate = entries.filter(e => e.usedKlonopin).length / entries.length;
       const recentTrend = entries.length >= 3 ? 
         (entries[0].anxietyDuring - entries[entries.length - 1].anxietyDuring) : 0;
 
       const context = `
-Brian's patterns:
+${userName}'s patterns:
 - Average anxiety before: ${avgAnxietyBefore.toFixed(1)}/10
 - Average anxiety during: ${avgAnxietyDuring.toFixed(1)}/10
 - Klonopin usage rate: ${(klonopinRate * 100).toFixed(0)}%
@@ -589,44 +636,44 @@ Brian's patterns:
 - Total tasks completed: ${entries.length}
 `;
 
-      const response = await invokeLLM({
-        messages: [
-          {
-            role: "system",
-            content: `You are a supportive coach providing a daily tip for Brian's behavioral activation journey.
+      try {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a supportive coach providing a daily tip for ${userName}'s behavioral activation journey.
 Generate ONE brief, actionable tip (1-2 sentences) based on his patterns.
 Be specific and practical. If anxiety is high, suggest grounding techniques.
 If Klonopin use is frequent, gently encourage trying without when ready.
 If he's doing well, reinforce what's working. Never be preachy.`
-          },
-          {
-            role: "user",
-            content: `Generate a personalized tip for Brian:\n${context}`
-          }
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "daily_tip",
-            strict: true,
-            schema: {
-              type: "object",
-              properties: {
-                tip: { type: "string", description: "The actionable tip" },
-                category: { 
-                  type: "string", 
-                  enum: ["anxiety-management", "motivation", "progress", "technique", "celebration"],
-                  description: "Category of the tip"
-                }
-              },
-              required: ["tip", "category"],
-              additionalProperties: false
+            },
+            {
+              role: "user",
+              content: `Generate a personalized tip for ${userName}:\n${context}`
+            }
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "daily_tip",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  tip: { type: "string", description: "The actionable tip" },
+                  category: { 
+                    type: "string", 
+                    enum: ["anxiety-management", "motivation", "progress", "technique", "celebration"],
+                    description: "Category of the tip"
+                  }
+                },
+                required: ["tip", "category"],
+                additionalProperties: false
+              }
             }
           }
-        }
-      });
+        });
 
-      try {
         const content = response.choices[0]?.message?.content;
         const contentStr = typeof content === 'string' ? content : JSON.stringify(content) || '{}';
         const parsed = JSON.parse(contentStr);
@@ -634,9 +681,10 @@ If he's doing well, reinforce what's working. Never be preachy.`
           tip: parsed.tip || "Take it one step at a time. You're doing great.",
           category: parsed.category || "motivation"
         };
-      } catch {
+      } catch (error) {
+        console.error("[AI] Failed to generate tip of the day:", error);
         return {
-          tip: "Remember: the goal isn't perfection, it's progress.",
+          tip: `Remember: the goal isn't perfection, it's progress. A ${avgReduction.toFixed(1)} point change in anxiety is still movement.`,
           category: "motivation"
         };
       }
@@ -650,12 +698,13 @@ If he's doing well, reinforce what's working. Never be preachy.`
         
         const user = await db.getUserById(input.userId);
         if (!user) throw new TRPCError({ code: 'NOT_FOUND' });
+        const clientName = user.name?.trim() || "Brian";
         
         const entries = await db.getUserEntries(input.userId, 14);
         
         if (entries.length < 2) {
           return {
-            summary: "Not enough data yet for AI analysis. Brian needs to complete more tasks.",
+            summary: `Not enough data yet for AI analysis. ${clientName} needs to complete more tasks.`,
             concerns: [],
             positives: []
           };
@@ -667,7 +716,7 @@ If he's doing well, reinforce what's working. Never be preachy.`
         const recentWins = entries.filter(e => e.winNote).map(e => e.winNote);
 
         const context = `
-Client: Brian
+Client: ${clientName}
 Recent activity (${entries.length} entries over last 2 weeks):
 - Current streak: ${user.currentStreak} days
 - Longest streak: ${user.longestStreak} days
@@ -678,48 +727,48 @@ Recent activity (${entries.length} entries over last 2 weeks):
 - Recent self-reported wins: ${recentWins.length > 0 ? recentWins.join('; ') : 'None'}
 `;
 
-        const response = await invokeLLM({
-          messages: [
-            {
-              role: "system",
-              content: `You are an AI assistant helping a therapist monitor a client's behavioral activation progress.
+        try {
+          const response = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content: `You are an AI assistant helping a therapist monitor a client's behavioral activation progress.
 Provide a concise clinical summary (3-4 sentences) highlighting key patterns, concerns, and positives.
 Be objective and professional. Flag any concerning patterns (high anxiety, increased Klonopin use, breaks in streaks).
 Also note positive trends (consistent engagement, anxiety reduction, self-reported wins).`
-            },
-            {
-              role: "user",
-              content: `Generate a clinical summary for the therapist:\n${context}`
-            }
-          ],
-          response_format: {
-            type: "json_schema",
-            json_schema: {
-              name: "clinical_summary",
-              strict: true,
-              schema: {
-                type: "object",
-                properties: {
-                  summary: { type: "string", description: "Brief clinical summary" },
-                  concerns: { 
-                    type: "array", 
-                    items: { type: "string" },
-                    description: "List of concerns to monitor"
+              },
+              {
+                role: "user",
+                content: `Generate a clinical summary for the therapist:\n${context}`
+              }
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: {
+                name: "clinical_summary",
+                strict: true,
+                schema: {
+                  type: "object",
+                  properties: {
+                    summary: { type: "string", description: "Brief clinical summary" },
+                    concerns: { 
+                      type: "array", 
+                      items: { type: "string" },
+                      description: "List of concerns to monitor"
+                    },
+                    positives: { 
+                      type: "array", 
+                      items: { type: "string" },
+                      description: "List of positive observations"
+                    }
                   },
-                  positives: { 
-                    type: "array", 
-                    items: { type: "string" },
-                    description: "List of positive observations"
-                  }
-                },
-                required: ["summary", "concerns", "positives"],
-                additionalProperties: false
+                  required: ["summary", "concerns", "positives"],
+                  additionalProperties: false
+                }
               }
             }
-          }
-        });
+          });
 
-        try {
           const content = response.choices[0]?.message?.content;
           const contentStr = typeof content === 'string' ? content : JSON.stringify(content) || '{}';
           const parsed = JSON.parse(contentStr);
@@ -728,11 +777,12 @@ Also note positive trends (consistent engagement, anxiety reduction, self-report
             concerns: parsed.concerns || [],
             positives: parsed.positives || []
           };
-        } catch {
+        } catch (error) {
+          console.error("[AI] Failed to generate client summary:", error);
           return {
-            summary: "Unable to parse AI response.",
-            concerns: [],
-            positives: []
+            summary: `${clientName} has logged ${entries.length} entries in the last two weeks. Average anxiety went from ${avgAnxietyBefore.toFixed(1)}/10 before tasks to ${avgAnxietyDuring.toFixed(1)}/10 during tasks. ${klonopinRate}% of tasks included Klonopin. Keep monitoring streak durability (${user.currentStreak} current, ${user.longestStreak} max).`,
+            concerns: klonopinRate && parseInt(klonopinRate, 10) > 50 ? ["Frequent Klonopin use—consider exploring strategies to reduce reliance."] : [],
+            positives: recentWins.length > 0 ? recentWins.slice(0, 3) : []
           };
         }
       }),
